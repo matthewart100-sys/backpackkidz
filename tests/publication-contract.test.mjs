@@ -352,7 +352,7 @@ test("candidate check binds an exact two-file diff and rejects a direct slot edi
   const parent = mkdtempSync(join(tmpdir(), "bpk-publication-candidate-"));
   const root = join(parent, "repo");
   const targetFile = SLOT_DEFINITIONS["home.hero.summary"].file;
-  const baseSource = `<!doctype html>\n<!-- governed-publication:home.hero.summary:start -->\n  Original governed text.\n<!-- governed-publication:home.hero.summary:end -->\n`;
+  const baseSource = `<!doctype html>\n<p class="hero-lede">\n<!-- governed-publication:home.hero.summary:start -->\n  Original governed text.\n<!-- governed-publication:home.hero.summary:end -->\n</p>\n<div id="parking"></div>\n`;
   const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 
   try {
@@ -424,6 +424,86 @@ test("candidate check binds an exact two-file diff and rejects a direct slot edi
     assert.equal(
       validateCandidateDiff(root, { base: base.head, head: candidateHead }).mode,
       "governed-publication-candidate"
+    );
+
+    git(["checkout", "-b", "ordinary-file-edit", base.head]);
+    writeFileSync(
+      join(root, targetFile),
+      baseSource.replace("<!doctype html>", "<!doctype html>\n<!-- ordinary non-governed page edit -->"),
+      "utf8"
+    );
+    git(["add", targetFile]);
+    git(["commit", "-m", "ordinary file edit"]);
+    const ordinaryHead = git(["rev-parse", "HEAD"]);
+    assert.equal(
+      validateCandidateDiff(root, { base: base.head, head: ordinaryHead }).mode,
+      "non-publication-change"
+    );
+
+    git(["checkout", "-b", "missing-slot-marker", base.head]);
+    writeFileSync(
+      join(root, targetFile),
+      baseSource.replace(
+        "<!-- governed-publication:home.hero.summary:start -->",
+        "<!-- removed governed start marker -->"
+      ),
+      "utf8"
+    );
+    git(["add", targetFile]);
+    git(["commit", "-m", "tamper with governed marker"]);
+    const missingMarkerHead = git(["rev-parse", "HEAD"]);
+    assert.throws(
+      () => validateCandidateDiff(root, { base: base.head, head: missingMarkerHead }),
+      /cannot be validated: Slot markers .* missing or out of order/u
+    );
+
+    git(["checkout", "-b", "duplicate-visible-container", base.head]);
+    const duplicateContainerSource = [
+      "<!doctype html>",
+      "<p class=\"hero-lede\">Unreceipted visible replacement.</p>",
+      "<p class=\"hero-lede\">",
+      "<!-- governed-publication:home.hero.summary:start -->",
+      "  Original governed text.",
+      "<!-- governed-publication:home.hero.summary:end -->",
+      "</p>",
+      "<div id=\"parking\"></div>",
+      "",
+    ].join("\n");
+    writeFileSync(join(root, targetFile), duplicateContainerSource, "utf8");
+    git(["add", targetFile]);
+    git(["commit", "-m", "duplicate visible governed container"]);
+    const duplicateContainerHead = git(["rev-parse", "HEAD"]);
+    assert.throws(
+      () => validateCandidateDiff(root, { base: base.head, head: duplicateContainerHead }),
+      /must remain inside exactly one bound container/u
+    );
+
+    git(["checkout", "-b", "raw-slot-edit", base.head]);
+    writeFileSync(
+      join(root, targetFile),
+      baseSource.replace("  Original governed text.", "    Original governed text.   "),
+      "utf8"
+    );
+    git(["add", targetFile]);
+    git(["commit", "-m", "raw governed slot edit"]);
+    const rawEditHead = git(["rev-parse", "HEAD"]);
+    assert.throws(
+      () => validateCandidateDiff(root, { base: base.head, head: rawEditHead }),
+      /exactly one allowlisted slot file and add exactly one receipt/u
+    );
+
+    git(["checkout", "-b", "unrelated-paragraph", base.head]);
+    writeFileSync(
+      join(root, targetFile),
+      baseSource.replace('<div id="parking"></div>', '<p>Unrelated paragraph.</p>\n<div id="parking"></div>'),
+      "utf8"
+    );
+    git(["add", targetFile]);
+    git(["commit", "-m", "unrelated paragraph"]);
+    const unrelatedParagraphHead = git(["rev-parse", "HEAD"]);
+    assert.equal(
+      validateCandidateDiff(root, { base: base.head, head: unrelatedParagraphHead }).mode,
+      "non-publication-change"
     );
 
     git(["checkout", "-b", "tampered-receipt", base.head]);
