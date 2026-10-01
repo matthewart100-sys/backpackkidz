@@ -1,10 +1,10 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 1. Project Overview
 
-This is the production website for **Back Pack Kidz** (https://www.backpackkidz.com/), a 501(c)(3) nonprofit (legal entity on the FL DR-14 certificate: "The Yah Yah Girls Inc") that fights weekend childhood hunger in Charlotte County, Florida. Volunteers pack weekend food bags distributed through all 13 county elementary schools (plus middle/high school pantries), serving 1,000+ children per week since 2010.
+This is the production website for **Back Pack Kidz** (https://www.backpackkidz.com/), a 501(c)(3) nonprofit (legal entity on the FL DR-14 certificate: "The Yah Yah Girls Inc") that fights weekend childhood hunger in Charlotte County, Florida. Volunteers pack weekend food bags distributed through 10 elementary schools and 1 special needs school, with school-pantry snacks available to all students, serving 1,000+ children per week since 2010.
 
 The site serves donors, parents, volunteers, churches, schools, sponsors, and community partners. It must always feel clean, warm, trustworthy, professional, and donor-friendly — and it must work well on phones.
 
@@ -92,7 +92,7 @@ All frontend behavior lives in `BackPackKidzWebsite/script.js`, loaded with `def
 
 - Behavior is opt-in via data attributes: `[data-donate-link]` (forced to `/pages/donate.html`), `[data-paypal-link]` (forced to the PayPal URL), `[data-api-form]`, `[data-donation-form]`, `[data-reveal]`, `[data-sponsor-calc]`, etc. New behavior should follow this pattern so pages without the markup are unaffected.
 - The generic `[data-api-form]` handler posts a form's named fields as JSON to its `action`, disables the submit button while in flight, maps server `fields: []` errors onto `[data-error-for]` nodes with `aria-invalid`/`aria-describedby`, and swaps form → `[data-form-success]` panel on success. Wire new forms into this handler instead of writing bespoke fetch code.
-- The sponsor cost constant appears in **three places that must match**: `COST_PER_CHILD` in `netlify/sponsorship-utils.mjs`, `data-cost-per-child="320"` in `pages/sponsor.html`, and the `|| 320` fallback in `script.js`.
+- The grant-season sponsor cost is **$275** in `COST_PER_CHILD` and `data-cost-per-child="275"`. The legacy `script.js` fallback remains `320` because that file is inside the separately governed partner-registry boundary; the live Sponsor page supplies the explicit 275 data attribute, so the fallback is not used there. Do not change the fallback outside the governed partner publication path.
 - No frontend secrets, ever. The only tokens the frontend handles are user-entered export tokens sent as `Authorization: Bearer` headers. Never log donor data to the console.
 
 ## 7. Form and Backend Standards
@@ -130,7 +130,7 @@ Rules:
 - Keep the direct PayPal path prominent. The hosted button URL is `https://www.paypal.com/donate/?hosted_button_id=VSXH3DH6PUFH2` — **never change or break it** unless the owner explicitly provides a replacement. It appears in `script.js`, `donate.html`, and as the `PAYPAL_DONATION_URL` default.
 - Never collect or store card numbers; PayPal (or another hosted provider, if the owner ever chooses one) handles all payment data.
 - Donor detail fields stay optional. Their purpose is thank-you notes, tribute messages, bookkeeping, and follow-up — not payment.
-- Do not invent donation amounts, sponsor costs, tax claims, or receipt wording. Verified amounts: **$10 feeds a child for a weekend; $320 for a school year**.
+- Do not invent donation amounts, sponsor costs, tax claims, or receipt wording. Verified grant-season figures: **$8.08 per bag; 34 delivery weeks; $275 per child per school year**.
 - If you change payment automation, include explicit testing instructions (PayPal sandbox is supported via `PAYPAL_ENV=sandbox`).
 
 ## 10. Donor Data and Privacy Rules
@@ -175,7 +175,7 @@ Copy must read human, clear, and warm — emotionally honest without being manip
 
 - Preferred themes: feeding children, weekend food support, Charlotte County community, volunteers, schools, churches, local partners, donor trust, hope, practical impact.
 - Never invent facts, statistics, names, or testimonials. Missing real-world details get an HTML comment TODO addressed to the owner (existing pattern: `<!-- TODO (owner): ... -->`).
-- Verified facts safe to use: 1,000+ children fed weekly; 13 elementary schools; serving since 2010; 100% volunteer run; $10/weekend and $320/school-year; mailing address 1133 Bal Harbor Blvd. Suite 1139, PMB #148, Punta Gorda, FL 33950.
+- Verified facts safe to use: 1,000+ children fed weekly; 10 elementary schools plus 1 special needs school; serving since 2010; 100% volunteer run; $8.08 per bag, 34 delivery weeks, and $275 per child per school year; mailing address 1133 Bal Harbor Blvd. Suite 1139, PMB #148, Punta Gorda, FL 33950.
 - Real mailboxes: `donate@`, `hello@`, `support@`, `partners@`, `contact@backpackkidz.com`. **`info@backpackkidz.com` does not exist — never use it.**
 
 ## 15. Nonprofit Trust and Legal Information Rules
