@@ -15,11 +15,13 @@ export const SLOT_DEFINITIONS = Object.freeze({
     file: "BackPackKidzWebsite/index.html",
     description: "Home-page hero supporting sentence",
     maxLength: 280,
+    containerOpen: '<p class="hero-lede">',
   }),
   "events.featured.summary": Object.freeze({
     file: "BackPackKidzWebsite/pages/future-events.html",
     description: "Featured-event hero summary",
     maxLength: 500,
+    containerOpen: '<p class="lede">',
   }),
 });
 
@@ -789,38 +791,34 @@ const governedMarkerChangedBetween = (root, base, head, file, slot) => {
     .some((line) => line.includes(startToken) || line.includes(endToken));
 };
 
-const governedFrameIdentity = (source, slot) => {
+const rawGovernedSlot = (source, slot) => {
   const normalized = normalizeGitText(source);
   const location = locateSlot(normalized, slot);
-  const lines = normalized.split("\n");
-  const startLine = normalized.slice(0, location.markerStart).split("\n").length - 1;
-  const endMarkerEnd = location.contentEnd + location.endToken.length;
-  const endLine = normalized.slice(0, endMarkerEnd).split("\n").length - 1;
+  return normalized.slice(location.contentStart, location.contentEnd);
+};
 
-  let beforeIndex = startLine - 1;
-  while (beforeIndex >= 0 && lines[beforeIndex].trim() === "") beforeIndex -= 1;
-  let afterIndex = endLine + 1;
-  while (afterIndex < lines.length && lines[afterIndex].trim() === "") afterIndex += 1;
+const assertGovernedContainer = (source, slot) => {
+  const normalized = normalizeGitText(source);
+  const definition = getSlotDefinition(slot);
+  const open = definition?.containerOpen;
+  if (!open) fail(`Governed slot ${slot} has no container binding.`);
 
-  if (beforeIndex < 0 || afterIndex >= lines.length) {
-    fail(`Governed slot ${slot} must remain inside a stable HTML frame.`);
+  const first = normalized.indexOf(open);
+  const second = first < 0 ? -1 : normalized.indexOf(open, first + open.length);
+  if (first < 0 || second >= 0) {
+    fail(`Governed slot ${slot} must remain inside exactly one bound container.`);
   }
 
-  const before = lines[beforeIndex].trim();
-  const after = lines[afterIndex].trim();
-  const sameBefore = lines.map((line) => line.trim()).filter((line) => line === before);
-  const sameAfter = lines.map((line) => line.trim()).filter((line) => line === after);
-  const beforeOrdinal = lines.slice(0, beforeIndex + 1).map((line) => line.trim()).filter((line) => line === before).length;
-  const afterOrdinal = lines.slice(0, afterIndex + 1).map((line) => line.trim()).filter((line) => line === after).length;
+  const close = normalized.indexOf("</p>", first + open.length);
+  if (close < 0) {
+    fail(`Governed slot ${slot} bound container is not closed.`);
+  }
 
-  return {
-    before,
-    after,
-    beforeOrdinal,
-    beforeCount: sameBefore.length,
-    afterOrdinal,
-    afterCount: sameAfter.length,
-  };
+  const location = locateSlot(normalized, slot);
+  const markerEnd = location.contentEnd + location.endToken.length;
+  if (location.markerStart <= first || markerEnd >= close) {
+    fail(`Governed slot ${slot} markers must remain inside the bound container.`);
+  }
 };
 
 const gitPathExists = (root, revision, file) => {
@@ -907,30 +905,30 @@ export const validateCandidateDiff = (root, { base, head }) => {
 
     let baseSource;
     let headSource;
-    let baseValue;
-    let headValue;
+    let baseRaw;
+    let headRaw;
 
     try {
       baseSource = readGitFile(root, baseTree, definition.file);
       headSource = readGitFile(root, headTree, definition.file);
-      baseValue = readSlotFromSource(baseSource, slot);
-      headValue = readSlotFromSource(headSource, slot);
+      assertGovernedContainer(baseSource, slot);
+      assertGovernedContainer(headSource, slot);
+      readSlotFromSource(baseSource, slot);
+      readSlotFromSource(headSource, slot);
+      baseRaw = rawGovernedSlot(baseSource, slot);
+      headRaw = rawGovernedSlot(headSource, slot);
     } catch (error) {
       fail(`Governed slot ${slot} cannot be validated: ${error.message}`);
     }
 
-    if (baseValue === headValue) {
-      const markerChanged = governedMarkerChangedBetween(root, base, head, definition.file, slot);
-      const frameChanged =
-        canonicalJson(governedFrameIdentity(baseSource, slot)) !==
-        canonicalJson(governedFrameIdentity(headSource, slot));
-
-      if (markerChanged || frameChanged) {
-        fail(`Governed slot ${slot} markers or containing frame were moved or modified without a publication receipt.`);
-      }
+    if (
+      baseRaw === headRaw &&
+      governedMarkerChangedBetween(root, base, head, definition.file, slot)
+    ) {
+      fail(`Governed slot ${slot} markers were moved or modified without a publication receipt.`);
     }
 
-    if (baseValue !== headValue) {
+    if (baseRaw !== headRaw) {
       changedSlots.push({ slot, file: definition.file });
     }
   }
