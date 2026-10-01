@@ -15,11 +15,13 @@ export const SLOT_DEFINITIONS = Object.freeze({
     file: "BackPackKidzWebsite/index.html",
     description: "Home-page hero supporting sentence",
     maxLength: 280,
+    containerOpen: '<p class="hero-lede">',
   }),
   "events.featured.summary": Object.freeze({
     file: "BackPackKidzWebsite/pages/future-events.html",
     description: "Featured-event hero summary",
     maxLength: 500,
+    containerOpen: '<p class="lede">',
   }),
 });
 
@@ -774,6 +776,51 @@ const changedFilesBetween = (root, base, head) => {
   return changes;
 };
 
+const governedMarkerChangedBetween = (root, base, head, file, slot) => {
+  const startToken = marker(slot, "start");
+  const endToken = marker(slot, "end");
+  const diff = execFileSync(
+    "git",
+    ["diff", "--unified=0", "--no-renames", base, head, "--", file],
+    { cwd: root, encoding: "utf8" }
+  );
+
+  return diff
+    .split(/\r?\n/u)
+    .filter((line) => (line.startsWith("+") && !line.startsWith("+++")) || (line.startsWith("-") && !line.startsWith("---")))
+    .some((line) => line.includes(startToken) || line.includes(endToken));
+};
+
+const rawGovernedSlot = (source, slot) => {
+  const normalized = normalizeGitText(source);
+  const location = locateSlot(normalized, slot);
+  return normalized.slice(location.contentStart, location.contentEnd);
+};
+
+const assertGovernedContainer = (source, slot) => {
+  const normalized = normalizeGitText(source);
+  const definition = getSlotDefinition(slot);
+  const open = definition?.containerOpen;
+  if (!open) fail(`Governed slot ${slot} has no container binding.`);
+
+  const first = normalized.indexOf(open);
+  const second = first < 0 ? -1 : normalized.indexOf(open, first + open.length);
+  if (first < 0 || second >= 0) {
+    fail(`Governed slot ${slot} must remain inside exactly one bound container.`);
+  }
+
+  const close = normalized.indexOf("</p>", first + open.length);
+  if (close < 0) {
+    fail(`Governed slot ${slot} bound container is not closed.`);
+  }
+
+  const location = locateSlot(normalized, slot);
+  const markerEnd = location.contentEnd + location.endToken.length;
+  if (location.markerStart <= first || markerEnd >= close) {
+    fail(`Governed slot ${slot} markers must remain inside the bound container.`);
+  }
+};
+
 const gitPathExists = (root, revision, file) => {
   try {
     execFileSync("git", ["cat-file", "-e", `${revision}:${file}`], {
@@ -842,23 +889,60 @@ export const validateCandidateDiff = (root, { base, head }) => {
     return { status: "passed", mode: "governed-lane-bootstrap", base, head, headTree, changedFiles };
   }
 
-  const slotFiles = new Set(Object.values(SLOT_DEFINITIONS).map(({ file }) => file));
   const logoResult = validateLogoCandidate(root, { base, head });
   if (logoResult) return logoResult;
-  const governedChanges = changes.filter(
-    ({ file }) => slotFiles.has(file) || file.startsWith("publication/audit/")
-  );
 
-  if (governedChanges.length === 0) {
+  const receiptChanges = changes.filter(({ file }) => file.startsWith("publication/audit/"));
+  const changedSlots = [];
+
+  for (const [slot, definition] of Object.entries(SLOT_DEFINITIONS)) {
+    const fileChange = changes.find(({ file }) => file === definition.file);
+    if (!fileChange) continue;
+
+    if (fileChange.status !== "M") {
+      fail(`Governed slot file ${definition.file} must remain a regular file modification.`);
+    }
+
+    let baseSource;
+    let headSource;
+    let baseRaw;
+    let headRaw;
+
+    try {
+      baseSource = readGitFile(root, baseTree, definition.file);
+      headSource = readGitFile(root, headTree, definition.file);
+      assertGovernedContainer(baseSource, slot);
+      assertGovernedContainer(headSource, slot);
+      readSlotFromSource(baseSource, slot);
+      readSlotFromSource(headSource, slot);
+      baseRaw = rawGovernedSlot(baseSource, slot);
+      headRaw = rawGovernedSlot(headSource, slot);
+    } catch (error) {
+      fail(`Governed slot ${slot} cannot be validated: ${error.message}`);
+    }
+
+    if (
+      baseRaw === headRaw &&
+      governedMarkerChangedBetween(root, base, head, definition.file, slot)
+    ) {
+      fail(`Governed slot ${slot} markers were moved or modified without a publication receipt.`);
+    }
+
+    if (baseRaw !== headRaw) {
+      changedSlots.push({ slot, file: definition.file });
+    }
+  }
+
+  if (changedSlots.length === 0 && receiptChanges.length === 0) {
     return { status: "passed", mode: "non-publication-change", base, head, headTree, changedFiles };
   }
 
-  if (changes.length !== 2) {
+  if (changedSlots.length !== 1 || changes.length !== 2) {
     fail("A publication candidate must change exactly one allowlisted slot file and add exactly one receipt.");
   }
 
-  const targetChange = changes.find(({ file }) => slotFiles.has(file));
-  const receiptChange = changes.find(({ file }) => file.startsWith("publication/audit/"));
+  const targetChange = changes.find(({ file }) => file === changedSlots[0].file);
+  const receiptChange = receiptChanges[0];
 
   if (targetChange?.status !== "M" || receiptChange?.status !== "A") {
     fail("A publication candidate requires one modified allowlisted slot and one newly added receipt.");
