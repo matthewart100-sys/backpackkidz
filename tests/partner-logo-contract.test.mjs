@@ -34,7 +34,7 @@ function fixture(t, classification = "synthetic_public_safe", partnerIds = ["nic
   const { privateKey, publicKey } = generateKeyPairSync("ed25519");
   const now = Math.floor(Date.now() / 1000);
   const keys = [{ key_id: "ephemeral-test-key", purpose, public_key: publicKey.export({ format: "der", type: "spki" }).subarray(-32).toString("base64url"), not_before: now - 60, not_after: now + 3600 }];
-  for (const path of [REGISTRY_PATH, TODO_PATH, "scripts/publication-contract.mjs", "scripts/partner-logo-contract.mjs", "scripts/partner-logo.mjs", "scripts/publication-shared.mjs"]) {
+  for (const path of [REGISTRY_PATH, TODO_PATH, "scripts/publication-contract.mjs", "scripts/partner-logo-contract.mjs", "scripts/partner-logo.mjs", "scripts/partner-grant-season-contract.mjs", "scripts/publication-shared.mjs"]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     cpSync(join(sourceRoot, path), join(root, path));
   }

@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { validateLogoCandidate } from "./partner-logo-contract.mjs";
+import { validatePartnerGrantSeasonCandidate } from "./partner-grant-season-contract.mjs";
 import { canonicalJson, resolveSafeRepositoryPath } from "./publication-shared.mjs";
 export { canonicalJson, resolveSafeRepositoryPath } from "./publication-shared.mjs";
 
@@ -888,6 +889,9 @@ export const validateCandidateDiff = (root, { base, head }) => {
 
     return { status: "passed", mode: "governed-lane-bootstrap", base, head, headTree, changedFiles };
   }
+
+  const partnerBatchResult = validatePartnerGrantSeasonCandidate(root, { base, head });
+  if (partnerBatchResult) return partnerBatchResult;
 
   const logoResult = validateLogoCandidate(root, { base, head });
   if (logoResult) return logoResult;
