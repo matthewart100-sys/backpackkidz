@@ -842,23 +842,45 @@ export const validateCandidateDiff = (root, { base, head }) => {
     return { status: "passed", mode: "governed-lane-bootstrap", base, head, headTree, changedFiles };
   }
 
-  const slotFiles = new Set(Object.values(SLOT_DEFINITIONS).map(({ file }) => file));
   const logoResult = validateLogoCandidate(root, { base, head });
   if (logoResult) return logoResult;
-  const governedChanges = changes.filter(
-    ({ file }) => slotFiles.has(file) || file.startsWith("publication/audit/")
-  );
 
-  if (governedChanges.length === 0) {
+  const receiptChanges = changes.filter(({ file }) => file.startsWith("publication/audit/"));
+  const changedSlots = [];
+
+  for (const [slot, definition] of Object.entries(SLOT_DEFINITIONS)) {
+    const fileChange = changes.find(({ file }) => file === definition.file);
+    if (!fileChange) continue;
+
+    if (fileChange.status !== "M") {
+      fail(`Governed slot file ${definition.file} must remain a regular file modification.`);
+    }
+
+    let baseValue;
+    let headValue;
+
+    try {
+      baseValue = readSlotFromSource(readGitFile(root, baseTree, definition.file), slot);
+      headValue = readSlotFromSource(readGitFile(root, headTree, definition.file), slot);
+    } catch (error) {
+      fail(`Governed slot ${slot} cannot be validated: ${error.message}`);
+    }
+
+    if (baseValue !== headValue) {
+      changedSlots.push({ slot, file: definition.file });
+    }
+  }
+
+  if (changedSlots.length === 0 && receiptChanges.length === 0) {
     return { status: "passed", mode: "non-publication-change", base, head, headTree, changedFiles };
   }
 
-  if (changes.length !== 2) {
+  if (changedSlots.length !== 1 || changes.length !== 2) {
     fail("A publication candidate must change exactly one allowlisted slot file and add exactly one receipt.");
   }
 
-  const targetChange = changes.find(({ file }) => slotFiles.has(file));
-  const receiptChange = changes.find(({ file }) => file.startsWith("publication/audit/"));
+  const targetChange = changes.find(({ file }) => file === changedSlots[0].file);
+  const receiptChange = receiptChanges[0];
 
   if (targetChange?.status !== "M" || receiptChange?.status !== "A") {
     fail("A publication candidate requires one modified allowlisted slot and one newly added receipt.");

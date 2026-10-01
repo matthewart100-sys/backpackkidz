@@ -426,6 +426,37 @@ test("candidate check binds an exact two-file diff and rejects a direct slot edi
       "governed-publication-candidate"
     );
 
+    git(["checkout", "-b", "ordinary-file-edit", base.head]);
+    writeFileSync(
+      join(root, targetFile),
+      baseSource.replace("<!doctype html>", "<!doctype html>\n<!-- ordinary non-governed page edit -->"),
+      "utf8"
+    );
+    git(["add", targetFile]);
+    git(["commit", "-m", "ordinary file edit"]);
+    const ordinaryHead = git(["rev-parse", "HEAD"]);
+    assert.equal(
+      validateCandidateDiff(root, { base: base.head, head: ordinaryHead }).mode,
+      "non-publication-change"
+    );
+
+    git(["checkout", "-b", "missing-slot-marker", base.head]);
+    writeFileSync(
+      join(root, targetFile),
+      baseSource.replace(
+        "<!-- governed-publication:home.hero.summary:start -->",
+        "<!-- removed governed start marker -->"
+      ),
+      "utf8"
+    );
+    git(["add", targetFile]);
+    git(["commit", "-m", "tamper with governed marker"]);
+    const missingMarkerHead = git(["rev-parse", "HEAD"]);
+    assert.throws(
+      () => validateCandidateDiff(root, { base: base.head, head: missingMarkerHead }),
+      /cannot be validated: Slot markers .* missing or out of order/u
+    );
+
     git(["checkout", "-b", "tampered-receipt", base.head]);
     const attackerRestoreValue = "Attacker-selected rollback text.";
     const tamperedReceipt = {
