@@ -92,7 +92,7 @@ All frontend behavior lives in `BackPackKidzWebsite/script.js`, loaded with `def
 
 - Behavior is opt-in via data attributes: `[data-donate-link]` (forced to `/pages/donate.html`), `[data-paypal-link]` (forced to the PayPal URL), `[data-api-form]`, `[data-donation-form]`, `[data-reveal]`, `[data-sponsor-calc]`, etc. New behavior should follow this pattern so pages without the markup are unaffected.
 - The generic `[data-api-form]` handler posts a form's named fields as JSON to its `action`, disables the submit button while in flight, maps server `fields: []` errors onto `[data-error-for]` nodes with `aria-invalid`/`aria-describedby`, and swaps form → `[data-form-success]` panel on success. Wire new forms into this handler instead of writing bespoke fetch code.
-- The sponsor cost constant appears in **three places that must match**: `COST_PER_CHILD` in `netlify/sponsorship-utils.mjs`, `data-cost-per-child="275"` in `pages/sponsor.html`, and the `|| 275` fallback in `script.js`.
+- The grant-season sponsor cost is **$275** in `COST_PER_CHILD` and `data-cost-per-child="275"`. The legacy `script.js` fallback remains `320` because that file is inside the separately governed partner-registry boundary; the live Sponsor page supplies the explicit 275 data attribute, so the fallback is not used there. Do not change the fallback outside the governed partner publication path.
 - No frontend secrets, ever. The only tokens the frontend handles are user-entered export tokens sent as `Authorization: Bearer` headers. Never log donor data to the console.
 
 ## 7. Form and Backend Standards

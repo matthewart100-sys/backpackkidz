@@ -78,12 +78,12 @@ test("Python-produced canonical PNG is accepted and every structural mutation fa
   assert.throws(() => validateCanonicalPng(Buffer.from("<svg/>"), 2, 1));
 });
 
-test("one partner edit preserves URLs and clears the last unresolved logo TODO", () => {
+test("one partner edit preserves URLs, other records and unresolved TODO", () => {
   const result = editRegistry(registry, [item()]);
   assert.match(result, /image: "\/assets\/partner-nicolas-canonical.png"/u);
   assert.ok(result.includes(PARTNERS.nicolas.href) && result.includes(PARTNERS["studio-seven"].href));
   const updatedTodo = editTodo(todo, result);
-  assert.doesNotMatch(updatedTodo, /TODO \(owner\): Provide (?:an )?approved logo file/u);
+  assert.match(updatedTodo, /approved logo file for Studio Seven PG/u);
   assert.equal(editRegistry(registry.replace(/\r\n/gu, "\n"), [item()]).replace(/\n/gu, "\r\n"), result.replace(/\r?\n/gu, "\r\n"));
 });
 
