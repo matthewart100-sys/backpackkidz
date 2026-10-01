@@ -774,6 +774,55 @@ const changedFilesBetween = (root, base, head) => {
   return changes;
 };
 
+const governedMarkerChangedBetween = (root, base, head, file, slot) => {
+  const startToken = marker(slot, "start");
+  const endToken = marker(slot, "end");
+  const diff = execFileSync(
+    "git",
+    ["diff", "--unified=0", "--no-renames", base, head, "--", file],
+    { cwd: root, encoding: "utf8" }
+  );
+
+  return diff
+    .split(/\r?\n/u)
+    .filter((line) => (line.startsWith("+") && !line.startsWith("+++")) || (line.startsWith("-") && !line.startsWith("---")))
+    .some((line) => line.includes(startToken) || line.includes(endToken));
+};
+
+const governedFrameIdentity = (source, slot) => {
+  const normalized = normalizeGitText(source);
+  const location = locateSlot(normalized, slot);
+  const lines = normalized.split("\n");
+  const startLine = normalized.slice(0, location.markerStart).split("\n").length - 1;
+  const endMarkerEnd = location.contentEnd + location.endToken.length;
+  const endLine = normalized.slice(0, endMarkerEnd).split("\n").length - 1;
+
+  let beforeIndex = startLine - 1;
+  while (beforeIndex >= 0 && lines[beforeIndex].trim() === "") beforeIndex -= 1;
+  let afterIndex = endLine + 1;
+  while (afterIndex < lines.length && lines[afterIndex].trim() === "") afterIndex += 1;
+
+  if (beforeIndex < 0 || afterIndex >= lines.length) {
+    fail(`Governed slot ${slot} must remain inside a stable HTML frame.`);
+  }
+
+  const before = lines[beforeIndex].trim();
+  const after = lines[afterIndex].trim();
+  const sameBefore = lines.map((line) => line.trim()).filter((line) => line === before);
+  const sameAfter = lines.map((line) => line.trim()).filter((line) => line === after);
+  const beforeOrdinal = lines.slice(0, beforeIndex + 1).map((line) => line.trim()).filter((line) => line === before).length;
+  const afterOrdinal = lines.slice(0, afterIndex + 1).map((line) => line.trim()).filter((line) => line === after).length;
+
+  return {
+    before,
+    after,
+    beforeOrdinal,
+    beforeCount: sameBefore.length,
+    afterOrdinal,
+    afterCount: sameAfter.length,
+  };
+};
+
 const gitPathExists = (root, revision, file) => {
   try {
     execFileSync("git", ["cat-file", "-e", `${revision}:${file}`], {
@@ -856,14 +905,29 @@ export const validateCandidateDiff = (root, { base, head }) => {
       fail(`Governed slot file ${definition.file} must remain a regular file modification.`);
     }
 
+    let baseSource;
+    let headSource;
     let baseValue;
     let headValue;
 
     try {
-      baseValue = readSlotFromSource(readGitFile(root, baseTree, definition.file), slot);
-      headValue = readSlotFromSource(readGitFile(root, headTree, definition.file), slot);
+      baseSource = readGitFile(root, baseTree, definition.file);
+      headSource = readGitFile(root, headTree, definition.file);
+      baseValue = readSlotFromSource(baseSource, slot);
+      headValue = readSlotFromSource(headSource, slot);
     } catch (error) {
       fail(`Governed slot ${slot} cannot be validated: ${error.message}`);
+    }
+
+    if (baseValue === headValue) {
+      const markerChanged = governedMarkerChangedBetween(root, base, head, definition.file, slot);
+      const frameChanged =
+        canonicalJson(governedFrameIdentity(baseSource, slot)) !==
+        canonicalJson(governedFrameIdentity(headSource, slot));
+
+      if (markerChanged || frameChanged) {
+        fail(`Governed slot ${slot} markers or containing frame were moved or modified without a publication receipt.`);
+      }
     }
 
     if (baseValue !== headValue) {

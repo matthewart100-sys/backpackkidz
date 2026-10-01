@@ -352,7 +352,7 @@ test("candidate check binds an exact two-file diff and rejects a direct slot edi
   const parent = mkdtempSync(join(tmpdir(), "bpk-publication-candidate-"));
   const root = join(parent, "repo");
   const targetFile = SLOT_DEFINITIONS["home.hero.summary"].file;
-  const baseSource = `<!doctype html>\n<!-- governed-publication:home.hero.summary:start -->\n  Original governed text.\n<!-- governed-publication:home.hero.summary:end -->\n`;
+  const baseSource = `<!doctype html>\n<p id="hero">\n<!-- governed-publication:home.hero.summary:start -->\n  Original governed text.\n<!-- governed-publication:home.hero.summary:end -->\n</p>\n<div id="parking"></div>\n`;
   const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 
   try {
@@ -455,6 +455,28 @@ test("candidate check binds an exact two-file diff and rejects a direct slot edi
     assert.throws(
       () => validateCandidateDiff(root, { base: base.head, head: missingMarkerHead }),
       /cannot be validated: Slot markers .* missing or out of order/u
+    );
+
+    git(["checkout", "-b", "relocated-slot-markers", base.head]);
+    const relocatedSource = [
+      "<!doctype html>",
+      "<p id=\"hero\">",
+      "  Unreceipted direct edit.",
+      "</p>",
+      "<div id=\"parking\">",
+      "<!-- governed-publication:home.hero.summary:start -->",
+      "  Original governed text.",
+      "<!-- governed-publication:home.hero.summary:end -->",
+      "</div>",
+      "",
+    ].join("\n");
+    writeFileSync(join(root, targetFile), relocatedSource, "utf8");
+    git(["add", targetFile]);
+    git(["commit", "-m", "relocate governed markers"]);
+    const relocatedHead = git(["rev-parse", "HEAD"]);
+    assert.throws(
+      () => validateCandidateDiff(root, { base: base.head, head: relocatedHead }),
+      /markers or containing frame were moved or modified without a publication receipt/u
     );
 
     git(["checkout", "-b", "tampered-receipt", base.head]);
