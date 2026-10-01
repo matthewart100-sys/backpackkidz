@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { generateKeyPairSync, sign } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import {
-  cpSync, mkdirSync, mkdtempSync, readFileSync,
+  mkdirSync, mkdtempSync,
   rmSync, writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -15,10 +15,23 @@ import {
   PARTNERS_PAGE_PATH, PURPOSE, REGISTRY_PATH, contentManifest,
   planPartnerGrantSeasonFiles, transformEventsPage,
   transformPartnersPage, transformRegistry,
+  validatePartnerGrantSeasonCandidate,
 } from "../scripts/partner-grant-season-contract.mjs";
 import { sha } from "../scripts/partner-logo-contract.mjs";
 
 const sourceRoot = resolve(import.meta.dirname, "..");
+const PRE_BATCH_FIXTURE_COMMIT =
+  "7999e548f45feb99bfa880fdff553ee52e92aa49";
+const readPreBatchFixture = (path) =>
+  execFileSync(
+    "git",
+    ["show", `${PRE_BATCH_FIXTURE_COMMIT}:${path}`],
+    {
+      cwd: sourceRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }
+  );
 const crcTable = Array.from({ length: 256 }, (_, value) => {
   let crc = value;
   for (let n = 0; n < 8; n += 1) {
@@ -98,6 +111,14 @@ const envelope = (payload, privateKey, keyId = "ephemeral-batch-key") => {
     ).toString("base64url"),
   };
 };
+const nonCanonicalBase64url = (value) => {
+  const alphabet =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const index = alphabet.indexOf(value.at(-1));
+  assert.ok(index >= 0);
+  const replacement = (index & 0b110000) | ((index + 1) & 0b001111);
+  return value.slice(0, -1) + alphabet[replacement];
+};
 const git = (root, ...args) =>
   execFileSync("git", args, {
     cwd: root,
@@ -105,9 +126,9 @@ const git = (root, ...args) =>
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
 
-const baseRegistry = readFileSync(join(sourceRoot, REGISTRY_PATH), "utf8");
-const basePartners = readFileSync(join(sourceRoot, PARTNERS_PAGE_PATH), "utf8");
-const baseEvents = readFileSync(join(sourceRoot, EVENTS_PAGE_PATH), "utf8");
+const baseRegistry = readPreBatchFixture(REGISTRY_PATH);
+const basePartners = readPreBatchFixture(PARTNERS_PAGE_PATH);
+const baseEvents = readPreBatchFixture(EVENTS_PAGE_PATH);
 test("fixed partner batch transforms only the approved September set", () => {
   const registry = transformRegistry(baseRegistry);
   const partners = transformPartnersPage(basePartners);
@@ -167,13 +188,13 @@ test("signed exact batch passes and any extra diff fails", (t) => {
   const { privateKey, publicKey } = generateKeyPairSync("ed25519");
   const now = Math.floor(Date.now() / 1000);
 
-  for (const path of [
-    REGISTRY_PATH,
-    PARTNERS_PAGE_PATH,
-    EVENTS_PAGE_PATH,
+  for (const [path, contents] of [
+    [REGISTRY_PATH, baseRegistry],
+    [PARTNERS_PAGE_PATH, basePartners],
+    [EVENTS_PAGE_PATH, baseEvents],
   ]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
-    cpSync(join(sourceRoot, path), join(root, path));
+    writeFileSync(join(root, path), contents);
   }
 
   mkdirSync(join(root, "scripts"), { recursive: true });
@@ -212,6 +233,22 @@ test("signed exact batch passes and any extra diff fails", (t) => {
     head: git(root, "rev-parse", "HEAD"),
     tree: git(root, "rev-parse", "HEAD^{tree}"),
   };
+  git(root, "switch", "-c", "event-only");
+  writeFileSync(
+    join(root, EVENTS_PAGE_PATH),
+    baseEvents + "\n<!-- unrelated future event edit -->\n"
+  );
+  git(root, "add", ".");
+  git(root, "commit", "-m", "ordinary future event edit");
+  const eventOnlyHead = git(root, "rev-parse", "HEAD");
+  assert.equal(
+    validatePartnerGrantSeasonCandidate(root, {
+      base: base.head,
+      head: eventOnlyHead,
+    }),
+    null
+  );
+  git(root, "switch", "main");
   const assets = new Map(
     Object.entries(ASSETS).map(([id, value]) => [
       id,
@@ -270,12 +307,33 @@ test("signed exact batch passes and any extra diff fails", (t) => {
     writeFileSync(join(root, path), bytes);
   }
   mkdirSync(dirname(join(root, receiptPath)), { recursive: true });
+
+  const nonCanonicalReceipt = JSON.parse(JSON.stringify(receipt));
+  nonCanonicalReceipt.materialization.signature =
+    nonCanonicalBase64url(
+      nonCanonicalReceipt.materialization.signature
+    );
+  writeFileSync(
+    join(root, receiptPath),
+    canonicalJson(nonCanonicalReceipt) + "\n"
+  );
+  git(root, "add", ".");
+  git(root, "commit", "-m", "non-canonical receipt encoding");
+  const nonCanonicalHead = git(root, "rev-parse", "HEAD");
+  assert.throws(
+    () => validateCandidateDiff(root, {
+      base: base.head,
+      head: nonCanonicalHead,
+    }),
+    /partner_batch_signature_invalid/u
+  );
+
   writeFileSync(
     join(root, receiptPath),
     canonicalJson(receipt) + "\n"
   );
   git(root, "add", ".");
-  git(root, "commit", "-m", "exact signed batch");
+  git(root, "commit", "-m", "canonical signed batch");
   const head = git(root, "rev-parse", "HEAD");
 
   assert.equal(
@@ -285,6 +343,27 @@ test("signed exact batch passes and any extra diff fails", (t) => {
     }).mode,
     "partner-grant-season-candidate"
   );
+
+  git(root, "switch", "-c", "partner-batch-rollback");
+  writeFileSync(join(root, REGISTRY_PATH), baseRegistry);
+  writeFileSync(join(root, PARTNERS_PAGE_PATH), basePartners);
+  writeFileSync(join(root, EVENTS_PAGE_PATH), baseEvents);
+  for (const { path } of Object.values(ASSETS)) {
+    rmSync(join(root, path), { force: true });
+  }
+  rmSync(join(root, receiptPath), { force: true });
+  git(root, "add", "-A");
+  git(root, "commit", "-m", "exact governed batch rollback");
+  const rollbackHead = git(root, "rev-parse", "HEAD");
+  assert.equal(
+    validateCandidateDiff(root, {
+      base: head,
+      head: rollbackHead,
+    }).mode,
+    "partner-grant-season-rollback-candidate"
+  );
+
+  git(root, "switch", "partner-batch-candidate");
   writeFileSync(
     join(root, "unauthorized.txt"),
     "outside signed manifest\n"

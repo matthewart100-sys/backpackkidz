@@ -365,6 +365,12 @@ function verifyEnvelope(envelope, keys, at) {
       /^[A-Za-z0-9_-]{86}$/u.test(envelope.signature),
     "partner_batch_signature_invalid"
   );
+  const signatureBytes = Buffer.from(envelope.signature, "base64url");
+  require(
+    signatureBytes.length === 64 &&
+      signatureBytes.toString("base64url") === envelope.signature,
+    "partner_batch_signature_invalid"
+  );
   try {
     const publicKey = createPublicKey({
       key: Buffer.concat([
@@ -379,7 +385,7 @@ function verifyEnvelope(envelope, keys, at) {
         null,
         Buffer.from(canonicalJson(unsigned)),
         publicKey,
-        Buffer.from(envelope.signature, "base64url")
+        signatureBytes
       ),
       "partner_batch_signature_invalid"
     );
@@ -486,6 +492,126 @@ function validateReceipt(receipt, keys) {
   );
   return grant;
 }
+function parseReceiptFromRevision(root, revision, receiptPath, keys) {
+  let receipt;
+  let rawReceipt;
+  try {
+    rawReceipt = readGitText(root, revision, receiptPath);
+    receipt = JSON.parse(rawReceipt);
+  } catch {
+    fail("partner_batch_receipt_json_invalid");
+  }
+  require(
+    rawReceipt === canonicalJson(receipt) + "\n",
+    "partner_batch_receipt_noncanonical"
+  );
+  return { receipt, rawReceipt, grant: validateReceipt(receipt, keys) };
+}
+
+function validatePartnerGrantSeasonRollback(
+  root,
+  { base, head, changes, receiptPath }
+) {
+  const receiptChange = changes.find(({ path }) => path === receiptPath);
+  require(
+    receiptChange?.status === "D",
+    "partner_batch_rollback_receipt_invalid"
+  );
+
+  const keys = loadKeys(root, base);
+  const { grant } = parseReceiptFromRevision(
+    root,
+    base,
+    receiptPath,
+    keys
+  );
+  try {
+    git(root, ["merge-base", "--is-ancestor", grant.base.head, base]);
+  } catch {
+    fail("partner_batch_rollback_original_base_invalid");
+  }
+  require(
+    gitText(root, ["rev-parse", `${grant.base.head}^{tree}`]) ===
+      grant.base.tree,
+    "partner_batch_rollback_original_base_invalid"
+  );
+
+  const assets = new Map(
+    Object.entries(ASSETS).map(([id, definition]) => [
+      id,
+      readGit(root, base, definition.path),
+    ])
+  );
+  const forwardFiles = planPartnerGrantSeasonFiles({
+    registry: readGitText(root, grant.base.head, REGISTRY_PATH),
+    partnersPage: readGitText(root, grant.base.head, PARTNERS_PAGE_PATH),
+    eventsPage: readGitText(root, grant.base.head, EVENTS_PAGE_PATH),
+    assets,
+  });
+  require(
+    canonicalJson(contentManifest(forwardFiles)) ===
+      canonicalJson(grant.manifest),
+    "partner_batch_rollback_manifest_mismatch"
+  );
+  for (const [path, bytes] of forwardFiles) {
+    require(
+      readGit(root, base, path).equals(bytes),
+      "partner_batch_rollback_source_drift"
+    );
+  }
+
+  const expected = new Map([
+    [REGISTRY_PATH, readGit(root, grant.base.head, REGISTRY_PATH)],
+    [
+      PARTNERS_PAGE_PATH,
+      readGit(root, grant.base.head, PARTNERS_PAGE_PATH),
+    ],
+    [EVENTS_PAGE_PATH, readGit(root, grant.base.head, EVENTS_PAGE_PATH)],
+    ...Object.values(ASSETS).map(({ path }) => [path, null]),
+    [receiptPath, null],
+  ]);
+  require(
+    changes.length === expected.size &&
+      changes.every(({ path, status }) => {
+        if (!expected.has(path)) return false;
+        return expected.get(path) === null ? status === "D" : status === "M";
+      }),
+    "partner_batch_rollback_diff_invalid"
+  );
+
+  for (const [path, bytes] of expected) {
+    if (bytes === null) {
+      require(
+        !gitText(root, ["ls-tree", head, "--", path]),
+        "partner_batch_rollback_deletion_invalid"
+      );
+      resolveSafeRepositoryPath(root, path, {
+        allowMissing: true,
+        requireFile: true,
+      });
+      continue;
+    }
+    require(
+      gitText(root, ["ls-tree", head, "--", path]).startsWith(
+        "100644 blob "
+      ) &&
+        readGit(root, head, path).equals(bytes),
+      "partner_batch_rollback_bytes_invalid"
+    );
+    resolveSafeRepositoryPath(root, path, { requireFile: true });
+  }
+
+  return {
+    status: "passed",
+    mode: "partner-grant-season-rollback-candidate",
+    batchId: BATCH_ID,
+    head,
+    headTree: gitText(root, ["rev-parse", `${head}^{tree}`]),
+    changedFiles: [...expected.keys()],
+    requiresSeparateHumanMergeAuthorization: true,
+  };
+}
+
 export function validatePartnerGrantSeasonCandidate(root, { base, head }) {
   require(
     gitId(base) &&
@@ -502,34 +628,35 @@ export function validatePartnerGrantSeasonCandidate(root, { base, head }) {
   const changes = candidateChanges(root, base, head);
   const receiptPath =
     `publication/audit/partner-grant-season-${BATCH_ID}.json`;
-  const batchSpecificPaths = new Set([
-    EVENTS_PAGE_PATH,
-    ...Object.values(ASSETS).map((value) => value.path),
-  ]);
+  const batchSpecificPaths = new Set(
+    Object.values(ASSETS).map((value) => value.path)
+  );
+  const receiptChange = changes.find(({ path }) => path === receiptPath);
   const touched =
-    changes.some(({ path }) => path === receiptPath) ||
+    Boolean(receiptChange) ||
     changes.some(({ path }) => batchSpecificPaths.has(path));
   if (!touched) return null;
 
-  const receiptChange = changes.find(({ path }) => path === receiptPath);
+  if (receiptChange?.status === "D") {
+    return validatePartnerGrantSeasonRollback(root, {
+      base,
+      head,
+      changes,
+      receiptPath,
+    });
+  }
+
   require(
     receiptChange?.status === "A",
     "partner_batch_receipt_missing"
   );
   const keys = loadKeys(root, base);
-  let receipt;
-  let rawReceipt;
-  try {
-    rawReceipt = readGitText(root, head, receiptPath);
-    receipt = JSON.parse(rawReceipt);
-  } catch {
-    fail("partner_batch_receipt_json_invalid");
-  }
-  require(
-    rawReceipt === canonicalJson(receipt) + "\n",
-    "partner_batch_receipt_noncanonical"
+  const { receipt, grant } = parseReceiptFromRevision(
+    root,
+    head,
+    receiptPath,
+    keys
   );
-  const grant = validateReceipt(receipt, keys);
   const baseTree = gitText(root, ["rev-parse", `${base}^{tree}`]);
   require(
     grant.base.head === base && grant.base.tree === baseTree,
