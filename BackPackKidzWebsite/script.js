@@ -1,4 +1,4 @@
-const paypalDonateUrl = "https://www.paypal.com/donate/?hosted_button_id=VSXH3DH6PUFH2";
+﻿const paypalDonateUrl = "https://www.paypal.com/donate/?hosted_button_id=VSXH3DH6PUFH2";
 const donatePageUrl = "/pages/donate.html";
 
 const communityPartners = [
@@ -17,6 +17,14 @@ const communityPartners = [
     className: "sponsor-logo-wide",
     width: 690,
     height: 239,
+  },
+  {
+    name: "Publix Super Markets Charities",
+    href: "https://publixcharities.org/",
+    image: "/assets/sponsor-publix-charities.jpg",
+    className: "sponsor-logo-wide",
+    width: 2470,
+    height: 644,
   },
   {
     name: "Gulf Coast Community Foundation",
@@ -54,19 +62,27 @@ const communityPartners = [
     height: 1265,
   },
   {
+    name: "Holy Trinity Lutheran Church",
+    href: "https://www.htlchurch.org/",
+    image: "/assets/sponsor-holy-trinity-lutheran.jpg",
+    className: "sponsor-logo-tall",
+    width: 155,
+    height: 209,
+  },
+  {
+    name: "First Presbyterian Church of Port Charlotte",
+    href: "https://fpcpc.com/",
+    image: "/assets/sponsor-first-presbyterian.jpg",
+    className: "sponsor-logo-wide",
+    width: 979,
+    height: 516,
+  },
+  {
     name: "Spago Day Spa",
     href: "https://www.spagodayspa.com/",
     image: "/assets/sponsor-spago-day-spa.jpg",
     width: 315,
     height: 315,
-  },
-  {
-    name: "Pilgrimage United Church of Christ",
-    href: "https://www.pilgrimageucc.org/",
-    image: "/assets/sponsor-pilgrimage-ucc.png",
-    className: "sponsor-logo-wide",
-    width: 302,
-    height: 150,
   },
   {
     name: "Fishermen's Village",
@@ -75,6 +91,29 @@ const communityPartners = [
     className: "sponsor-logo-wide",
     width: 600,
     height: 168,
+  },
+  {
+    name: "Leroy's Southern Kitchen & Bar",
+    href: "https://www.leroyspg.com/",
+    image: "/assets/sponsor-leroys.jpg",
+    className: "sponsor-logo-wide",
+    width: 746,
+    height: 579,
+  },
+  {
+    name: "Leroy's Fish Shack",
+    href: "https://leroysfishshack.com/",
+    image: "/assets/sponsor-leroys-fish-shack.png",
+    className: "sponsor-logo-wide",
+    width: 1840,
+    height: 1217,
+  },
+  {
+    name: "Matthews Moving",
+    href: "https://matthewsmovingllc.com/",
+    image: "/assets/sponsor-matthews-moving.jpg",
+    width: 960,
+    height: 960,
   },
   {
     name: "Riverwood Golf Club",
@@ -125,12 +164,15 @@ const communityPartners = [
     href: "https://www.samsclub.com/club/6445-port-charlotte-fl",
     image: "/assets/sams-club-port-charlotte-logo.jpg",
     className: "sponsor-logo-wide",
-    width: 690,
-    height: 239,
+    width: 840,
+    height: 473,
   },
   {
     name: "Studio Seven PG",
     href: "https://studiosevenpg.com/",
+    image: "/assets/sponsor-studio-seven.jpg",
+    width: 886,
+    height: 886,
   },
 ];
 
@@ -869,13 +911,13 @@ document.querySelectorAll("[data-api-form]").forEach((form) => {
 /* =========================
    Sponsorship cost estimate
    Mirrors the server-side COST_PER_CHILD so the Sponsor page can show a
-   live yearly total ($320 per child per school year, owner confirmed).
+   live yearly total ($275 per child across 34 delivery weeks).
 ========================= */
 
 const sponsorCalc = document.querySelector("[data-sponsor-calc]");
 
 if (sponsorCalc) {
-  const costPerChild = Number(sponsorCalc.dataset.costPerChild || 320);
+  const costPerChild = Number(sponsorCalc.dataset.costPerChild || 275);
   const countInput = sponsorCalc.querySelector("[data-sponsor-count]");
   const totalOutput = sponsorCalc.querySelector("[data-sponsor-total]");
 

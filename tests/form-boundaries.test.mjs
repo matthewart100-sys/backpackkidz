@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import { createContactRecord } from "../netlify/contact-utils.mjs";
 import { createPartnerRecord } from "../netlify/partner-utils.mjs";
@@ -31,9 +31,9 @@ test("sponsorship form contract preserves the confirmed annual amount", () => {
     { sponsorName: "Site Tester", email: "sponsor@example.org", numberOfChildren: "2" },
     NOW
   );
-  assert.equal(COST_PER_CHILD, 320);
+  assert.equal(COST_PER_CHILD, 275);
   assert.equal(result.error, undefined);
-  assert.equal(result.record.totalAmount, 640);
+  assert.equal(result.record.totalAmount, 550);
 });
 
 test("partner form contract still accepts its required fields", () => {
