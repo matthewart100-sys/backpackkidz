@@ -3412,13 +3412,47 @@ h3 {
 }
 
 
-/* Board roster: scoped to the new page, using the existing brand tokens. */
+/* Board page: all presentation stays within this page. */
 .board-page .page-hero {
-  padding: 3rem 0 4rem;
+  padding: 2rem 0 4rem;
+  background:
+    radial-gradient(ellipse at 8% 20%, #fff1df 0, transparent 42%),
+    radial-gradient(ellipse at 94% 32%, #eee5fc 0, transparent 48%),
+    linear-gradient(180deg, #fdfaff, #ffffff);
+}
+
+.board-page .page-hero > .section-inner {
+  max-width: 1080px;
+}
+
+.board-page .board-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.55rem 1rem;
+  border: 1px solid #ded3ed;
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--navy);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.board-page .board-back-link:hover {
+  background: #f3ecfc;
+  border-color: var(--navy);
+}
+
+.board-page .board-back-link span {
+  font-family: sans-serif;
+  font-size: 1.25rem;
 }
 
 .board-page .section-heading {
-  margin-bottom: 2rem;
+  max-width: 800px;
+  margin: 2rem auto 2.75rem;
 }
 
 .board-page .section-heading h1 {
@@ -3426,87 +3460,209 @@ h3 {
   text-align: center;
 }
 
+.board-page .section-heading h1::after {
+  content: "";
+  display: block;
+  width: 76px;
+  height: 5px;
+  margin: 1.25rem auto 0;
+  border-radius: 999px;
+  background: var(--grad-orange);
+  transform: rotate(-3deg);
+}
+
 .board-page .section-heading p {
   color: var(--text);
   font-size: 1.15rem;
 }
 
-.board-page .board-breadcrumb ol {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 2rem;
+.board-page .board-roster {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1.35rem;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.board-page .board-breadcrumb li {
+.board-page .board-member {
+  position: relative;
+  grid-column: span 2;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem 1.5rem;
+  border: 1px solid #e3d9ef;
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: 0 12px 30px rgba(70, 16, 136, 0.07);
+  text-align: center;
 }
 
-.board-page .board-breadcrumb li + li::before {
-  content: "/";
+.board-page .board-member::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 25%;
+  width: 50%;
+  height: 4px;
+  border-radius: 0 0 999px 999px;
+  background: var(--grad-purple);
+}
+
+.board-page .board-member:nth-child(4) {
+  grid-column: 2 / span 2;
+}
+
+.board-page .board-initials {
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  margin-bottom: 0.25rem;
+  border: 1px solid #e2d2f5;
+  border-radius: 50%;
+  background: #f3ebfd;
   color: var(--navy);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.board-page .board-breadcrumb a {
+.board-page .board-role {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--orange-soft);
+  color: #9a3412;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.board-page .board-member h2 {
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  font-size: 1.45rem;
+  line-height: 1.3;
+}
+
+.board-page .board-contact {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 44px;
+  margin-top: auto;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--navy);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.board-page .board-contact-label {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  color: var(--navy);
+  gap: 0.55rem;
+  text-decoration: underline;
   text-underline-offset: 0.2em;
 }
 
-.board-page .board-breadcrumb a:focus-visible {
+.board-page .board-contact-via {
+  color: #526174;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.board-page .board-contact:hover {
+  background: #f3ecfc;
+}
+
+.board-page .board-contact svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.board-page .board-contact-panel {
+  max-width: 700px;
+  margin: 2rem auto 0;
+  padding: 1.5rem 2rem;
+  border: 1px solid #e3d9ef;
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  text-align: center;
+}
+
+.board-page .board-contact-panel h2 {
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.board-page .board-contact-panel p {
+  margin-top: 0.75rem;
+  color: var(--text);
+}
+
+.board-page .board-contact-panel a {
+  display: inline-block;
+  min-height: 44px;
+  padding: 0.5rem 0;
+  color: var(--navy);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-underline-offset: 0.2em;
+}
+
+.board-page main a:focus-visible {
   outline: 3px solid var(--navy);
   outline-offset: 4px;
 }
 
-.board-page .board-roster {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-top: 4px solid var(--navy);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+.board-page .section-action {
+  justify-content: center;
+  margin-top: 1.75rem;
 }
 
-.board-page .board-member {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  align-items: center;
-  gap: 0.5rem 2rem;
-  padding: 1.5rem 0;
-}
-
-.board-page .board-member + .board-member {
-  border-top: 1px solid var(--border);
-}
-
-.board-page .board-member dt {
-  color: var(--navy);
-  font-weight: 700;
-}
-
-.board-page .board-member dd {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .board-page .board-roster {
-    padding: 0 1.25rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .board-page .board-member {
+  .board-page .board-member:nth-child(4) {
+    grid-column: span 2;
+  }
+
+  .board-page .board-member:last-child {
+    grid-column: 2 / span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .board-page .page-hero {
+    padding: 1.5rem 0 3rem;
+  }
+
+  .board-page .section-heading {
+    margin: 2rem auto;
+  }
+
+  .board-page .board-roster {
     grid-template-columns: minmax(0, 1fr);
-    padding: 1.25rem 0;
+    gap: 1rem;
+  }
+
+  .board-page .board-member,
+  .board-page .board-member:nth-child(4),
+  .board-page .board-member:last-child {
+    grid-column: auto;
+    padding: 1.5rem 1.25rem 1rem;
+  }
+
+  .board-page .board-contact-panel {
+    padding: 1.5rem 1.25rem;
   }
 }
