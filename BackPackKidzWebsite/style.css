@@ -3413,6 +3413,14 @@ h3 {
 
 
 /* Board roster: scoped to the new page, using the existing brand tokens. */
+.board-page .page-hero {
+  padding: 3rem 0 4rem;
+}
+
+.board-page .section-heading {
+  margin-bottom: 2rem;
+}
+
 .board-page .section-heading h1 {
   max-width: none;
   text-align: center;
@@ -3420,6 +3428,7 @@ h3 {
 
 .board-page .section-heading p {
   color: var(--text);
+  font-size: 1.15rem;
 }
 
 .board-page .board-breadcrumb ol {
@@ -3462,6 +3471,7 @@ h3 {
   padding: 0 2rem;
   background: var(--white);
   border: 1px solid var(--border);
+  border-top: 4px solid var(--navy);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
@@ -3487,6 +3497,7 @@ h3 {
   margin: 0;
   font-size: 1.3rem;
   font-weight: 700;
+  line-height: 1.4;
 }
 
 @media (max-width: 640px) {
