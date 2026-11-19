@@ -1,0 +1,14 @@
+{
+  "BackPackKidzWebsite/script.js": {
+    "before": "aecdc0e455ccd76af3f12ab7be8d6934be50ee60b4eb948cf63235bb8e27f2b0",
+    "after": "ff2d08ce69da189e60c5f10b37961b67eb983e795a0d44600b541b9c9ed544af"
+  },
+  "BackPackKidzWebsite/pages/our-partners.html": {
+    "before": "41d675994f79a0983376b10ba186904913913f378eba98e63c39221007ef1d8e",
+    "after": "b7cfc22d7ee9e607b80035889ee633282a8af6771e542a588bea0fbbd8229d36"
+  },
+  "BackPackKidzWebsite/assets/partner-nicolas-2026-11.png": {
+    "before": null,
+    "after": "792730cd6a3ed318263328a7c1d750a3345b382d83b7a01bb28e9282a839c34f"
+  }
+}
