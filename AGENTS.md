@@ -31,7 +31,7 @@ Then inspect the current branch, `HEAD`, worktree state, and relevant pull reque
 - Shared browser JS: `BackPackKidzWebsite/script.js`.
 - Backend: Netlify Functions under `netlify/functions/`.
 - Durable submission data: Netlify Blobs, with fail-soft email and Google Sheets integrations.
-- Payments: PayPal-hosted flow; the site must never collect card data.
+- Payments: the Donate page links to Zeffy and PayPal. Both providers host checkout.
 - `netlify.toml` owns publish/functions paths, API rewrites, and legacy redirects.
 
 Do not introduce a frontend framework, bundler, tracker, heavy dependency, or broad redesign unless the task explicitly requires it and the owner approves the change.
@@ -48,7 +48,7 @@ Treat donor and form-submission data as sensitive.
 
 ## Donation and form invariants
 
-- PayPal is the payment processor. Do not collect or store card numbers.
+- The optional donation form and IPN bookkeeping use PayPal. The general Zeffy link goes directly to Zeffy. Do not collect or store card numbers.
 - `paypal-ipn.js` is the only code path that may mark a donation Completed, and only after verified PayPal IPN handling.
 - Do not present form submission as payment success.
 - Do not weaken export-token checks or create unauthenticated donor-record access.

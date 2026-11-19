@@ -22,6 +22,13 @@ export async function browserQa(origin, items, { localFixture = false } = {}) {
       const target = new URL(request.url());
       if (request.method() !== "GET" || !["http:", "https:"].includes(target.protocol)) return route.abort();
       if (target.origin === origin && !/^\/(?:api|\.netlify)\//u.test(target.pathname)) return route.continue();
+      // OnlineWebFonts rejects stylesheets requested from the loopback test server.
+      // Exercise the fallback font in this fixture. Hosted verification loads the real font.
+      if (localFixture && target.origin === "https://db.onlinewebfonts.com" &&
+          target.pathname === "/c/699dc1e4167e2bdae611e413fd4a8fe0" &&
+          target.searchParams.get("family") === "Crayon Works DEMO Regular") {
+        return route.fulfill({ contentType: "text/css", body: "/* Offline font fallback */" });
+      }
       // The site's existing decorative webfont is the sole external resource.
       if (target.protocol === "https:" && ["db.onlinewebfonts.com", "fonts.onlinewebfonts.com"].includes(target.hostname) && !target.username && !target.password && !target.port) return route.continue();
       return route.abort();
