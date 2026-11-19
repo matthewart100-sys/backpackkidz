@@ -140,6 +140,14 @@ const communityPartners = [
     height: 34,
   },
   {
+    name: "WhitCo Insurance Agency",
+    image: "/assets/event-whitco-alexia.jpg",
+    alt: "WhitCo Insurance Agency, Alexia Martin",
+    className: "sponsor-logo-wide",
+    width: 720,
+    height: 167,
+  },
+  {
     name: "Oasis Pavers, LLC",
     href: "https://oasispaversllc.com/",
     image: "/assets/partner-oasis.png",
@@ -173,6 +181,10 @@ const communityPartners = [
   {
     name: "Nicola's Italian Kitchen",
     href: "https://www.nicolasitaliankitchen.net/",
+    image: "/assets/partner-nicolas-2026-11.png",
+    className: "sponsor-logo-tall",
+    width: 235,
+    height: 208,
   },
   {
     name: "Sam's Club Port Charlotte",
