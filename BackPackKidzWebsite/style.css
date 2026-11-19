@@ -3530,6 +3530,37 @@ h3 {
 }
 
 /* GivingTuesday 2026 */
+.giving-nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 .85rem;
+  border-radius: 999px;
+  background: #77243b;
+  color: var(--white);
+  font-size: .92rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.giving-nav-button:hover, .giving-nav-button[aria-current="page"] { background: #58162a; }
+.giving-nav-button:focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; }
+.giving-tuesday-active .footer-logo img { width: 44px; height: 44px; object-fit: contain; }
+@media (min-width: 1101px) {
+  .giving-tuesday-active .navbar { gap: .8rem; }
+  .giving-tuesday-active .nav-menu { gap: clamp(.65rem, 1vw, 1rem); }
+  .giving-tuesday-active .nav-actions { gap: .65rem; }
+}
+@media (min-width: 1101px) and (max-width: 1220px) {
+  .giving-tuesday-active .nav-logo { gap: .45rem; font-size: 1.05rem; }
+  .giving-tuesday-active .nav-menu { gap: .55rem; }
+  .giving-tuesday-active .nav-menu a,
+  .giving-tuesday-active .nav-link-secondary { font-size: .86rem; }
+  .giving-tuesday-active .nav-cta { padding-inline: .8rem; }
+  .giving-nav-button { padding-inline: .7rem; }
+}
+
 .giving-tuesday-link:not([hidden]) {
   display: block;
   background: #4a174e;
@@ -3543,18 +3574,46 @@ h3 {
 }
 .giving-tuesday-link span { margin-inline-start: .6rem; text-decoration: underline; }
 .giving-tuesday-link a:focus-visible { outline: 3px solid white; outline-offset: -4px; }
-.giving-hero { background: #fff3df; color: #3a193c; }
+.giving-hero {
+  color: #3a193c;
+  background:
+    radial-gradient(ellipse at 90% 20%, #ffd6e5 0%, transparent 56%),
+    linear-gradient(125deg, #fff3df, #fff6f3 55%, #fbe4ef);
+  border-bottom: 1px solid #edc6d5;
+}
 .giving-hero-inner, .giving-monthly, .giving-checkout-note {
   width: min(100% - 2.5rem, 68rem);
   margin-inline: auto;
 }
 .giving-hero-inner, .giving-monthly { display: grid; align-items: center; gap: clamp(1.5rem, 4vw, 4rem); }
 .giving-hero-inner { grid-template-columns: 1.5fr 1fr; padding-block: clamp(2rem, 7vw, 6rem); }
-.giving-date { color: #862a38; font-weight: 800; }
+.giving-hero .giving-date {
+  display: inline-block;
+  padding: .35rem .8rem;
+  border: 1px solid #e9a7ba;
+  border-radius: 999px;
+  background: #fff4f7;
+  color: #77243b;
+  font-weight: 800;
+}
 .giving-hero h1 { font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1.04; margin: .4em 0; letter-spacing: -.035em; }
 .giving-hero-copy > p, .giving-monthly p { line-height: 1.6; max-width: 60ch; }
+.giving-hero-copy > p:not(.giving-date) { color: #634154; }
 .giving-hero .button-row { align-items: center; margin-block-start: 1.5rem; }
-.giving-illustration { width: min(100%, 23rem); height: auto; justify-self: center; }
+.giving-art {
+  justify-self: center;
+  padding: clamp(.6rem, 2.4vw, 1.5rem);
+  border: 1px solid #f9f0ef;
+  border-radius: 48% 48% 40% 40%;
+  background:
+    radial-gradient(circle at 13% 27%, #ed8da5 0 4px, transparent 5px),
+    radial-gradient(circle at 86% 17%, #cb607b 0 3px, transparent 4px),
+    radial-gradient(circle at 92% 63%, #e8a256 0 5px, transparent 6px),
+    radial-gradient(circle at 15% 78%, #e8a256 0 3px, transparent 4px),
+    radial-gradient(circle, #fffaf0 45%, #ffe0e8 100%);
+  box-shadow: 0 18px 45px #77243b25;
+}
+.giving-illustration { width: min(100%, 23rem); height: auto; }
 .giving-primary { background: #77243b; color: #fff; }
 .giving-primary:hover { background: #58162a; color: #fff; }
 .giving-text-link { color: #611c3b; text-decoration: underline; font-weight: 700; padding: .7rem; }
@@ -3564,6 +3623,7 @@ h3 {
 .giving-checkout-note { border-top: 1px solid #dfcfd8; padding-block: 1rem 2rem; line-height: 1.5; }
 @media (max-width: 640px) {
   .giving-hero-inner, .giving-monthly { grid-template-columns: 1fr; }
-  .giving-illustration { width: 9rem; grid-row: 1; }
+  .giving-art { grid-row: 1; }
+  .giving-illustration { width: 9rem; }
   .giving-monthly .button { justify-self: start; }
 }
