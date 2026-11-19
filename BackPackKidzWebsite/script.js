@@ -140,6 +140,21 @@ const communityPartners = [
     height: 34,
   },
   {
+    name: "Oasis Pavers, LLC",
+    href: "https://oasispaversllc.com/",
+    image: "/assets/partner-oasis.png",
+    width: 150,
+    height: 120,
+  },
+  {
+    name: "HCA Florida Fawcett Hospital",
+    image: "/assets/partner-fawcett.png",
+    alt: "HCA Florida Fawcett Hospital",
+    className: "sponsor-logo-wide",
+    width: 260,
+    height: 58,
+  },
+  {
     name: "Punta Gorda Woman's Club",
     href: "https://puntagordawomansclub.com/",
     image: "/assets/sponsor-punta-gorda-womans-club.jpg",
