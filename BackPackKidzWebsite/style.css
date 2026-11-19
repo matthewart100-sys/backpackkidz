@@ -3528,3 +3528,42 @@ h3 {
     padding: 1.25rem 0;
   }
 }
+
+/* GivingTuesday 2026 */
+.giving-tuesday-link:not([hidden]) {
+  display: block;
+  background: #4a174e;
+  text-align: center;
+}
+.giving-tuesday-link a {
+  display: block;
+  padding: .8rem 1rem;
+  color: white;
+  font-weight: 700;
+}
+.giving-tuesday-link span { margin-inline-start: .6rem; text-decoration: underline; }
+.giving-tuesday-link a:focus-visible { outline: 3px solid white; outline-offset: -4px; }
+.giving-hero { background: #fff3df; color: #3a193c; }
+.giving-hero-inner, .giving-monthly, .giving-checkout-note {
+  width: min(100% - 2.5rem, 68rem);
+  margin-inline: auto;
+}
+.giving-hero-inner, .giving-monthly { display: grid; align-items: center; gap: clamp(1.5rem, 4vw, 4rem); }
+.giving-hero-inner { grid-template-columns: 1.5fr 1fr; padding-block: clamp(2rem, 7vw, 6rem); }
+.giving-date { color: #862a38; font-weight: 800; }
+.giving-hero h1 { font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1.04; margin: .4em 0; letter-spacing: -.035em; }
+.giving-hero-copy > p, .giving-monthly p { line-height: 1.6; max-width: 60ch; }
+.giving-hero .button-row { align-items: center; margin-block-start: 1.5rem; }
+.giving-illustration { width: min(100%, 23rem); height: auto; justify-self: center; }
+.giving-primary { background: #77243b; color: #fff; }
+.giving-primary:hover { background: #58162a; color: #fff; }
+.giving-text-link { color: #611c3b; text-decoration: underline; font-weight: 700; padding: .7rem; }
+.giving-hero-copy .giving-help, .giving-checkout-note { font-size: .95rem; }
+.giving-monthly { grid-template-columns: 1fr auto; padding-block: clamp(2rem, 5vw, 4rem); }
+.giving-monthly h2 { font-size: clamp(1.7rem, 4vw, 2.5rem); color: #3a193c; margin: 0; }
+.giving-checkout-note { border-top: 1px solid #dfcfd8; padding-block: 1rem 2rem; line-height: 1.5; }
+@media (max-width: 640px) {
+  .giving-hero-inner, .giving-monthly { grid-template-columns: 1fr; }
+  .giving-illustration { width: 9rem; grid-row: 1; }
+  .giving-monthly .button { justify-self: start; }
+}
