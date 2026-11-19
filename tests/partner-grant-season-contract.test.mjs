@@ -380,3 +380,67 @@ test("signed exact batch passes and any extra diff fails", (t) => {
     /partner_batch_unintended_diff/u
   );
 });
+test("November partners require both signatures, approved bytes and exactly the reviewed files", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "bpk-november-fixture-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const write = (path, data) => {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), data);
+  };
+  const commit = (message) => {
+    git(root, "add", ".");
+    git(root, "commit", "-m", message);
+    return git(root, "rev-parse", "HEAD");
+  };
+  const before = new Map([[REGISTRY_PATH, "fixture registry"], [PARTNERS_PAGE_PATH, "fixture page"]]);
+  const files = new Map([
+    [REGISTRY_PATH, Buffer.from("fixture registry updated")],
+    [PARTNERS_PAGE_PATH, Buffer.from("fixture page updated")],
+    ["BackPackKidzWebsite/assets/partner-oasis.png", syntheticPng(150, 120)],
+    ["BackPackKidzWebsite/assets/partner-fawcett.png", syntheticPng(260, 58)],
+  ]);
+  const plan = {};
+  for (const [path, data] of files) {
+    plan[path] = { before: before.has(path) ? sha(Buffer.from(before.get(path))) : null, after: sha(data) };
+  }
+  const batchId = "november-partners-2026-11";
+  const receiptPath = `publication/audit/partner-grant-season-${batchId}.json`;
+  const now = Math.floor(Date.now() / 1000);
+  const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+  write(KEY_PATH, canonicalJson({ schema: "partner_grant_season_keys_v1", keys: [{
+    key_id: "ephemeral-batch-key", purpose: PURPOSE,
+    public_key: publicKey.export({ format: "der", type: "spki" }).subarray(-32).toString("base64url"),
+    not_before: now - 60, not_after: now + 3600,
+  }] }));
+  for (const [path, source] of before) write(path, source);
+  write("publication/november-2026-partners.json", JSON.stringify(plan));
+  git(root, "init", "-b", "main");
+  git(root, "config", "user.name", "November Fixture");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "core.autocrlf", "false");
+  const base = commit("fixture base");
+  const manifest = contentManifest(files);
+  const common = { purpose: PURPOSE, audience: AUDIENCE, organization_id: "back-pack-kidz",
+    workspace_id: "production", execution_id: "november-fixture-execution", issued_at: now, expires_at: now + 300 };
+  const grant = envelope({ ...common, phase: "reserved", batch_id: batchId,
+    base: { head: base, tree: git(root, "rev-parse", "HEAD^{tree}") }, manifest,
+    run_id: "november-fixture-run", repository: "matthewart100-sys/backpackkidz" }, privateKey);
+  const materialization = envelope({ ...common, phase: "materialized", materialized_at: now,
+    grant_sha256: sha(Buffer.from(canonicalJson(grant))), manifest_sha256: sha(Buffer.from(canonicalJson(manifest))) }, privateKey);
+  const receipt = { schema: "partner_grant_season_receipt_v1", grant, materialization };
+  const check = (head, from = base) => validatePartnerGrantSeasonCandidate(root, { base: from, head });
+  for (const [path, data] of files) write(path, data);
+  assert.throws(() => check(commit("unsigned")), /november_partner_receipt_missing/u);
+  write(receiptPath, canonicalJson({ ...receipt, materialization: { ...materialization, signature: grant.signature } }) + "\n");
+  assert.throws(() => check(commit("wrong signature")), /partner_batch_signature_invalid/u);
+  write(receiptPath, canonicalJson(receipt) + "\n");
+  const approved = commit("signed fixture");
+  assert.equal(check(approved).batchId, batchId);
+  write("extra.txt", "unrelated");
+  assert.throws(() => check(commit("extra file")), /november_partner_unintended_diff/u);
+  git(root, "rm", "extra.txt");
+  write(REGISTRY_PATH, "unapproved change");
+  assert.throws(() => check(commit("wrong bytes")), /november_partner_content_invalid/u);
+  git(root, "restore", "--source", base, "--staged", "--worktree", ".");
+  assert.equal(check(commit("restore fixture"), approved).mode, "partner-grant-season-rollback-candidate");
+});
