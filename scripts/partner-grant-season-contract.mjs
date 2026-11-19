@@ -394,7 +394,7 @@ function verifyEnvelope(envelope, keys, at) {
   }
   return payload;
 }
-function validateGrant(grant, keys, at) {
+function validateGrant(grant, keys, at, batchId = BATCH_ID) {
   const payload = verifyEnvelope(grant, keys, at);
   exact(
     payload,
@@ -414,7 +414,7 @@ function validateGrant(grant, keys, at) {
       token(payload.execution_id) &&
       token(payload.run_id) &&
       payload.repository === "matthewart100-sys/backpackkidz" &&
-      payload.batch_id === BATCH_ID,
+      payload.batch_id === batchId && [BATCH_ID, NOVEMBER_BATCH].includes(batchId),
     "partner_batch_grant_identity_invalid"
   );
   exact(payload.base, ["head", "tree"], "partner_batch_base");
@@ -424,7 +424,7 @@ function validateGrant(grant, keys, at) {
   );
   require(
     Array.isArray(payload.manifest) &&
-      payload.manifest.length === 3 + Object.keys(ASSETS).length,
+      payload.manifest.length === (batchId === NOVEMBER_BATCH ? NOVEMBER_PATHS.length : 3 + Object.keys(ASSETS).length),
     "partner_batch_manifest_invalid"
   );
   for (const item of payload.manifest) {
@@ -446,7 +446,7 @@ function validateGrant(grant, keys, at) {
   return payload;
 }
 
-function validateReceipt(receipt, keys) {
+function validateReceipt(receipt, keys, batchId = BATCH_ID) {
   exact(
     receipt,
     ["schema", "grant", "materialization"],
@@ -461,7 +461,7 @@ function validateReceipt(receipt, keys) {
     Number.isSafeInteger(at),
     "partner_batch_materialization_time_invalid"
   );
-  const grant = validateGrant(receipt.grant, keys, at);
+  const grant = validateGrant(receipt.grant, keys, at, batchId);
   const materialization = verifyEnvelope(
     receipt.materialization,
     keys,
@@ -492,7 +492,7 @@ function validateReceipt(receipt, keys) {
   );
   return grant;
 }
-function parseReceiptFromRevision(root, revision, receiptPath, keys) {
+function parseReceiptFromRevision(root, revision, receiptPath, keys, batchId = BATCH_ID) {
   let receipt;
   let rawReceipt;
   try {
@@ -505,7 +505,7 @@ function parseReceiptFromRevision(root, revision, receiptPath, keys) {
     rawReceipt === canonicalJson(receipt) + "\n",
     "partner_batch_receipt_noncanonical"
   );
-  return { receipt, rawReceipt, grant: validateReceipt(receipt, keys) };
+  return { receipt, rawReceipt, grant: validateReceipt(receipt, keys, batchId) };
 }
 
 function validatePartnerGrantSeasonRollback(
@@ -612,6 +612,71 @@ function validatePartnerGrantSeasonRollback(
   };
 }
 
+const NOVEMBER_BATCH = "november-partners-2026-11";
+const NOVEMBER_PLAN = "publication/november-2026-partners.json";
+const NOVEMBER_RECEIPT = `publication/audit/partner-grant-season-${NOVEMBER_BATCH}.json`;
+const NOVEMBER_IMAGES = new Map([
+  ["BackPackKidzWebsite/assets/partner-oasis.png", [150, 120]],
+  ["BackPackKidzWebsite/assets/partner-fawcett.png", [260, 58]],
+]);
+const NOVEMBER_PATHS = [REGISTRY_PATH, PARTNERS_PAGE_PATH, ...NOVEMBER_IMAGES.keys()];
+
+function validateNovemberPartners(root, base, head, changes) {
+  const receiptChange = changes.find(({ path }) => path === NOVEMBER_RECEIPT);
+  if (!receiptChange && !changes.some(({ path }) => NOVEMBER_IMAGES.has(path))) return null;
+  require(["A", "D"].includes(receiptChange?.status), "november_partner_receipt_missing");
+  const rollback = receiptChange.status === "D";
+  // Rollbacks must restore the original signed base and remove precisely its additions.
+  const original = rollback ? head : base;
+  const published = rollback ? base : head;
+  const keys = loadKeys(root, base);
+  const { grant } = parseReceiptFromRevision(root, published, NOVEMBER_RECEIPT, keys, NOVEMBER_BATCH);
+  if (rollback) {
+    git(root, ["merge-base", "--is-ancestor", grant.base.head, base]);
+  } else {
+    require(grant.base.head === base, "november_partner_base_mismatch");
+  }
+  require(gitText(root, ["rev-parse", `${grant.base.head}^{tree}`]) === grant.base.tree, "november_partner_tree_mismatch");
+
+  // The reviewed preimages and exact publishable bytes must already be on the signed base.
+  const plan = JSON.parse(readGitText(root, grant.base.head, NOVEMBER_PLAN));
+  exact(plan, NOVEMBER_PATHS, "november_partner_plan");
+  const expectedStatus = new Map([[NOVEMBER_RECEIPT, rollback ? "D" : "A"]]);
+  const files = new Map();
+  for (const path of NOVEMBER_PATHS) {
+    const image = NOVEMBER_IMAGES.get(path);
+    const pins = plan[path];
+    exact(pins, ["before", "after"], "november_partner_pins");
+    require(hash(pins.after) && (image ? pins.before === null : hash(pins.before)), "november_partner_pins_invalid");
+    expectedStatus.set(path, image ? (rollback ? "D" : "A") : "M");
+    for (const revision of new Set([grant.base.head, original])) {
+      const entry = gitText(root, ["ls-tree", revision, "--", path]);
+      require(image ? !entry : entry.startsWith("100644 blob ") && sha(readGit(root, revision, path)) === pins.before, "november_partner_preimage_invalid");
+    }
+    const entry = gitText(root, ["ls-tree", published, "--", path]);
+    require(entry.startsWith("100644 blob "), "november_partner_mode_invalid");
+    const bytes = readGit(root, published, path);
+    require(sha(bytes) === pins.after, "november_partner_content_invalid");
+    if (image) validateCanonicalPng(bytes, ...image);
+    files.set(path, bytes);
+  }
+  require(gitText(root, ["ls-tree", published, "--", NOVEMBER_RECEIPT]).startsWith("100644 blob "), "november_partner_receipt_mode_invalid");
+  require(changes.length === expectedStatus.size && changes.every(({ path, status }) => expectedStatus.get(path) === status), "november_partner_unintended_diff");
+  require(canonicalJson(contentManifest(files)) === canonicalJson(grant.manifest), "november_partner_manifest_mismatch");
+  for (const { path, status } of changes) {
+    resolveSafeRepositoryPath(root, path, { requireFile: true, allowMissing: status === "D" });
+  }
+  return {
+    status: "passed",
+    mode: rollback ? "partner-grant-season-rollback-candidate" : "partner-grant-season-candidate",
+    batchId: NOVEMBER_BATCH,
+    head,
+    headTree: gitText(root, ["rev-parse", `${head}^{tree}`]),
+    changedFiles: [...expectedStatus.keys()],
+    ...(rollback ? { requiresSeparateHumanMergeAuthorization: true } : {}),
+  };
+}
+
 export function validatePartnerGrantSeasonCandidate(root, { base, head }) {
   require(
     gitId(base) &&
@@ -626,6 +691,8 @@ export function validatePartnerGrantSeasonCandidate(root, { base, head }) {
   }
 
   const changes = candidateChanges(root, base, head);
+  const november = validateNovemberPartners(root, base, head, changes);
+  if (november) return november;
   const receiptPath =
     `publication/audit/partner-grant-season-${BATCH_ID}.json`;
   const batchSpecificPaths = new Set(
