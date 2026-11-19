@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Page Not Found</title>
+    <link rel="icon" href="/assets/backpack-kidz-logo.png">
+    <script type="module" src="/giving-tuesday.js"></script>
     <style>
         * {
             margin: 0;
@@ -25,6 +27,12 @@
 
         .container {
             max-width: 500px;
+        }
+
+        .error-logo {
+            display: block;
+            margin: 0 auto 10px;
+            object-fit: contain;
         }
 
         .skip-link {
@@ -97,6 +105,7 @@
 
     <a class="skip-link" href="#content">Skip to main content</a>
     <main id="content" class="container">
+        <img class="error-logo" data-seasonal-logo src="/assets/backpack-kidz-logo.png" alt="Back Pack Kidz" width="64" height="64">
         <div class="error-code">404</div>
         <h1 class="error-title">Oops! Page Not Found</h1>
         <p class="error-message">
