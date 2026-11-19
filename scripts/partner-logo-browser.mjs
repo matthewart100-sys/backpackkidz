@@ -22,25 +22,18 @@ export async function browserQa(origin, items, { localFixture = false } = {}) {
       const target = new URL(request.url());
       if (request.method() !== "GET" || !["http:", "https:"].includes(target.protocol)) return route.abort();
       if (target.origin === origin && !/^\/(?:api|\.netlify)\//u.test(target.pathname)) return route.continue();
+      // OnlineWebFonts rejects stylesheets requested from the loopback test server.
+      // Exercise the fallback font in this fixture. Hosted verification loads the real font.
+      if (localFixture && target.origin === "https://db.onlinewebfonts.com" &&
+          target.pathname === "/c/699dc1e4167e2bdae611e413fd4a8fe0" &&
+          target.searchParams.get("family") === "Crayon Works DEMO Regular") {
+        return route.fulfill({ contentType: "text/css", body: "/* Offline font fallback */" });
+      }
       // The site's existing decorative webfont is the sole external resource.
       if (target.protocol === "https:" && ["db.onlinewebfonts.com", "fonts.onlinewebfonts.com"].includes(target.hostname) && !target.username && !target.password && !target.port) return route.continue();
       return route.abort();
     });
     const page = await context.newPage();
-    if (localFixture) {
-      // Report the resource category and host only. Keep URLs and console content out of CI logs.
-      page.on("requestfailed", request => {
-        console.error("Fixture network failure:", request.resourceType(), new URL(request.url()).hostname, request.failure()?.errorText);
-      });
-      page.on("response", response => {
-        if (response.status() >= 400) console.error("Fixture HTTP error:", response.request().resourceType(), new URL(response.url()).hostname, response.status());
-      });
-      page.on("console", message => {
-        if (message.type() !== "error") return;
-        const kind = ["Failed to load resource", "Access to font", "Refused to", "Failed to decode", "OTS parsing error"].find(prefix => message.text().includes(prefix));
-        console.error("Fixture console category:", kind ?? "other", message.location().url.split("/")[2]?.split("?")[0]);
-      });
-    }
     page.on("pageerror", () => errors.push("uncaught_script_error"));
     page.on("console", message => { if (message.type() === "error") errors.push("browser_console_error"); });
     page.on("response", response => { if (new URL(response.url()).origin === origin && response.status() >= 400) responses.push({ path: new URL(response.url()).pathname, status: response.status() }); });
