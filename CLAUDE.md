@@ -176,7 +176,7 @@ Copy must read human, clear, and warm — emotionally honest without being manip
 - Preferred themes: feeding children, weekend food support, Charlotte County community, volunteers, schools, churches, local partners, donor trust, hope, practical impact.
 - Never invent facts, statistics, names, or testimonials. Missing real-world details get an HTML comment TODO addressed to the owner (existing pattern: `<!-- TODO (owner): ... -->`).
 - Verified facts safe to use: 1,000+ children fed weekly; 10 elementary schools plus 1 special needs school; serving since 2010; 100% volunteer run; $8.08 per bag, 34 delivery weeks, and $275 per child per school year; mailing address 1133 Bal Harbor Blvd. Suite 1139, PMB #148, Punta Gorda, FL 33950.
-- Real mailboxes: `donate@`, `hello@`, `support@`, `partners@`, `contact@backpackkidz.com`. **`info@backpackkidz.com` does not exist — never use it.**
+- Existing role-specific addresses: `donate@`, `hello@`, `support@`, `partners@`, `contact@backpackkidz.com`. A connected Gmail mailbox for `info@backpackkidz.com` was readable on 2026-10-29; its current routing and individual ownership are not verified. Preserve the existing role-specific addresses unless the owner approves a change.
 
 ## 15. Nonprofit Trust and Legal Information Rules
 
@@ -231,7 +231,7 @@ After any meaningful change, run through (locally via `netlify dev`, or via scre
 - Add dependencies, frameworks, or build steps to the frontend.
 - Change `netlify.toml` or deployment settings casually, or push to `main` untested.
 - Commit from inside `BackPackKidzWebsite/.git`.
-- Use `info@backpackkidz.com` (it doesn't exist).
+- Replace existing role-specific addresses with `info@backpackkidz.com` without owner approval; mailbox access does not verify current routing or individual ownership.
 
 ## 19. Common Future Tasks
 
