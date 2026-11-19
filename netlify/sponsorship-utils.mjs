@@ -1,4 +1,4 @@
-export const sponsorshipFields = [
+﻿export const sponsorshipFields = [
   "id",
   "submittedAt",
   "sponsorName",
@@ -12,9 +12,9 @@ export const sponsorshipFields = [
   "isAnonymous",
 ];
 
-// One child is fed for a full school year for $320 ($10 per weekend).
+// Grant-season figure confirmed September 23, 2026: $8.08 per bag × 34 delivery weeks rounds to $275 per child per school year.
 // Keep in sync with data-cost-per-child on pages/sponsor.html.
-export const COST_PER_CHILD = 320;
+export const COST_PER_CHILD = 275;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

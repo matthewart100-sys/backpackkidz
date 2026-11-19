@@ -46,8 +46,8 @@ export const DONATION_SHEET_HEADERS = [
   "Completed At",
 ];
 
-const spreadsheetId = () => googleSheetsConfigStatus().spreadsheetId;
-const sheetTab = () => googleSheetsConfigStatus().tab;
+const spreadsheetId = () => process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+const sheetTab = () => process.env.GOOGLE_SHEETS_TAB || "Donations";
 
 export const isSheetsConfigured = () =>
   googleSheetsConfigStatus().configured;

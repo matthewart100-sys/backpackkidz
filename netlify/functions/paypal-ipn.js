@@ -5,7 +5,7 @@ import {
   markDonationCompletedInSheet,
   appendUnmatchedCompletedRow,
 } from "../google-sheets-utils.mjs";
-import { paypalBusiness, paypalExpectedReceiver } from "../config-utils.mjs";
+import { matchesPaypalReceiver } from "../config-utils.mjs";
 
 /*
   PayPal IPN (Instant Payment Notification) listener.
@@ -101,25 +101,15 @@ export default async (request) => {
   // Optional safety check that the money went to OUR PayPal account.
   // PAYPAL_BUSINESS is the standard setup variable; PAYPAL_RECEIVER_EMAIL
   // remains supported as a backward-compatible override.
-  if (!paypalBusiness()) {
+  if (!process.env.PAYPAL_BUSINESS && !process.env.PAYPAL_RECEIVER_EMAIL) {
     console.warn(
-      "PayPal IPN: PAYPAL_BUSINESS is not configured; receiver matching is limited to PAYPAL_RECEIVER_EMAIL if set."
+      "PayPal IPN: receiver matching is unconfigured."
     );
   }
 
-  const expectedReceiver = paypalExpectedReceiver().toLowerCase();
-
-  if (expectedReceiver) {
-    const receiver = (
-      params.get("receiver_email") ||
-      params.get("business") ||
-      ""
-    ).toLowerCase();
-
-    if (receiver !== expectedReceiver) {
-      console.error("PayPal IPN: receiver mismatch; ignoring.");
-      return ok();
-    }
+  if (!matchesPaypalReceiver(params)) {
+    console.error("PayPal IPN: receiver mismatch; ignoring.");
+    return ok();
   }
 
   // --- Step 3: duplicate prevention by transaction ID --------------------

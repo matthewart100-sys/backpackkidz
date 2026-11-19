@@ -1,6 +1,294 @@
 const paypalDonateUrl = "https://www.paypal.com/donate/?hosted_button_id=VSXH3DH6PUFH2";
 const donatePageUrl = "/pages/donate.html";
 
+const communityPartners = [
+  {
+    name: "Beyond Ourselves",
+    href: "https://www.pgica.org/Beyond_Ourselves",
+    image: "/assets/sponsor-beyond-ourselves.png",
+    className: "sponsor-logo-wide",
+    width: 1000,
+    height: 186,
+  },
+  {
+    name: "Charlotte Community Foundation",
+    href: "https://www.charlottecf.org/",
+    image: "/assets/sponsor-charlotte-community-foundation.png",
+    className: "sponsor-logo-wide",
+    width: 690,
+    height: 239,
+  },
+  {
+    name: "Publix Super Markets Charities",
+    href: "https://publixcharities.org/",
+    image: "/assets/partner-publix-charities-canonical.png",
+    className: "sponsor-logo-wide",
+    width: 260,
+    height: 68,
+  },
+  {
+    name: "Gulf Coast Community Foundation",
+    href: "https://gulfcoastcf.org/",
+    image: "/assets/sponsor-gulf-coast-center.png",
+    className: "sponsor-logo-wide",
+    width: 690,
+    height: 239,
+  },
+  {
+    // TODO (owner): the Hoffer Family Foundation has no standalone website, so both
+    // it and its German Shepherd Rescue division link to swflgsdrescue.com. Send a
+    // different foundation URL if you'd rather they point somewhere else.
+    name: "Hoffer Family Foundation",
+    href: "https://swflgsdrescue.com/",
+    image: "/assets/sponsor-hoffer-family-foundation.png",
+    className: "sponsor-logo-wide",
+    width: 1152,
+    height: 657,
+  },
+  {
+    name: "Southwest Florida German Shepherd Rescue",
+    href: "https://swflgsdrescue.com/",
+    image: "/assets/sponsor-swfl-german-shepherd-rescue.png",
+    className: "sponsor-logo-tall",
+    width: 480,
+    height: 544,
+  },
+  {
+    name: "Burnt Store Presbyterian Church",
+    href: "https://www.bspconline.org/",
+    image: "/assets/sponsor-burnt-store-presbyterian.png",
+    className: "sponsor-logo-tall",
+    width: 816,
+    height: 1265,
+  },
+  {
+    name: "Holy Trinity Lutheran Church",
+    href: "https://www.htlchurch.org/",
+    image: "/assets/partner-holy-trinity-lutheran-canonical.png",
+    className: "sponsor-logo-tall",
+    width: 89,
+    height: 120,
+  },
+  {
+    name: "First Presbyterian Church of Port Charlotte",
+    href: "https://fpcpc.com/",
+    image: "/assets/partner-first-presbyterian-canonical.png",
+    className: "sponsor-logo-wide",
+    width: 228,
+    height: 120,
+  },
+  {
+    name: "Spago Day Spa",
+    href: "https://www.spagodayspa.com/",
+    image: "/assets/sponsor-spago-day-spa.jpg",
+    width: 315,
+    height: 315,
+  },
+  {
+    name: "Fishermen's Village",
+    href: "https://www.fishermensvillage.com/",
+    image: "/assets/sponsor-fishermens-village.png",
+    className: "sponsor-logo-wide",
+    width: 600,
+    height: 168,
+  },
+  {
+    name: "Leroy's Southern Kitchen & Bar",
+    href: "https://www.leroyspg.com/",
+    image: "/assets/partner-leroys-canonical.png",
+    className: "sponsor-logo-wide",
+    width: 155,
+    height: 120,
+  },
+  {
+    name: "Leroy's Fish Shack",
+    href: "https://leroysfishshack.com/",
+    image: "/assets/partner-leroys-fish-shack-canonical.png",
+    className: "sponsor-logo-wide",
+    width: 181,
+    height: 120,
+  },
+  {
+    name: "Matthews Moving",
+    href: "https://matthewsmovingllc.com/",
+    image: "/assets/partner-matthews-moving-canonical.png",
+    width: 120,
+    height: 120,
+  },
+  {
+    name: "Riverwood Golf Club",
+    href: "https://www.riverwoodgc.com/",
+    image: "/assets/sponsor-riverwood-golf-club.png",
+    className: "sponsor-logo-tall",
+    width: 300,
+    height: 342,
+  },
+  {
+    name: "The Patterson Foundation",
+    href: "https://www.thepattersonfoundation.org/",
+    image: "/assets/sponsor-the-patterson-foundation.png",
+    className: "sponsor-logo-wide",
+    width: 690,
+    height: 239,
+  },
+  {
+    name: "Kendra Scott",
+    href: "https://www.kendrascott.com/stores",
+    image: "/assets/sponsor-kendra-scott.svg",
+    className: "sponsor-logo-wide",
+    width: 195,
+    height: 34,
+  },
+  {
+    name: "Punta Gorda Woman's Club",
+    href: "https://puntagordawomansclub.com/",
+    image: "/assets/sponsor-punta-gorda-womans-club.jpg",
+    className: "sponsor-logo-wide",
+    width: 2560,
+    height: 640,
+  },
+  {
+    name: "Charlotte Harbor Parrot Head Club",
+    href: "https://chphc.com/",
+    image: "/assets/sponsor-charlotte-players.png",
+    className: "sponsor-logo-wide",
+    width: 792,
+    height: 336,
+  },
+  {
+    name: "Nicola's Italian Kitchen",
+    href: "https://www.nicolasitaliankitchen.net/",
+  },
+  {
+    name: "Sam's Club Port Charlotte",
+    href: "https://www.samsclub.com/club/6445-port-charlotte-fl",
+    image: "/assets/sams-club-port-charlotte-logo.jpg",
+    className: "sponsor-logo-wide",
+    width: 840,
+    height: 473,
+  },
+  {
+    name: "Studio Seven PG",
+    href: "https://studiosevenpg.com/",
+    image: "/assets/partner-studio-seven-grant-season-2026-09.png",
+    width: 120,
+    height: 120,
+  },
+];
+
+const setElementHidden = (element, isHidden) => {
+  if (!(element instanceof HTMLElement)) {
+    return;
+  }
+
+  element.hidden = isHidden;
+  element.setAttribute("aria-hidden", String(isHidden));
+};
+
+const setLiveStatus = (node, message = "") => {
+  if (!(node instanceof HTMLElement)) {
+    return;
+  }
+
+  if (message) {
+    node.removeAttribute("aria-hidden");
+    node.textContent = message;
+  } else {
+    node.textContent = "";
+    node.setAttribute("aria-hidden", "true");
+  }
+};
+
+const setFormBusy = (form, submitButton, isBusy) => {
+  if (form instanceof HTMLElement) {
+    if (isBusy) {
+      form.setAttribute("aria-busy", "true");
+    } else {
+      form.removeAttribute("aria-busy");
+    }
+  }
+
+  if (submitButton instanceof HTMLButtonElement) {
+    submitButton.disabled = isBusy;
+  }
+};
+
+const buildPartnerLink = (partner, options = {}) => {
+  const link = document.createElement(partner.href ? "a" : "div");
+
+  link.className = ["sponsor-logo-link", partner.className]
+    .filter(Boolean)
+    .join(" ");
+
+  if (link instanceof HTMLAnchorElement) {
+    link.href = partner.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.setAttribute("aria-label", `Visit ${partner.name} website`);
+  }
+
+  if (options.reveal) {
+    link.setAttribute("data-reveal", "");
+  }
+
+  if (partner.image) {
+    const image = document.createElement("img");
+
+    image.src = partner.image;
+    image.alt = partner.alt || "";
+    image.loading = "lazy";
+    image.width = partner.width;
+    image.height = partner.height;
+    link.appendChild(image);
+  } else {
+    const textFallback = document.createElement("span");
+
+    textFallback.className = "sponsor-logo-text";
+    textFallback.textContent = partner.name;
+    link.appendChild(textFallback);
+  }
+
+  return link;
+};
+
+const renderPartnerLists = () => {
+  document.querySelectorAll("[data-partner-list]").forEach((list) => {
+    if (!(list instanceof HTMLElement)) {
+      return;
+    }
+
+    const isGrid = list.dataset.partnerList === "grid";
+    const isMarquee = list.dataset.partnerList === "marquee";
+
+    list.replaceChildren(
+      ...communityPartners.map((partner) =>
+        buildPartnerLink(partner, { reveal: isGrid })
+      )
+    );
+
+    if (!isMarquee) {
+      return;
+    }
+
+    const track = list.closest(".marquee-track");
+
+    if (!track || track.children.length > 1) {
+      return;
+    }
+
+    const clone = list.cloneNode(true);
+
+    clone.removeAttribute("data-partner-list");
+    clone.setAttribute("aria-hidden", "true");
+    clone.querySelectorAll("a").forEach((link) => {
+      link.setAttribute("tabindex", "-1");
+    });
+    track.appendChild(clone);
+  });
+};
+
+renderPartnerLists();
+
 const siteHeader = document.querySelector(".site-header");
 const navToggle = document.querySelector(".nav-toggle");
 const navPanel = document.querySelector("#primary-navigation");
@@ -11,7 +299,15 @@ const parallaxLayers = Array.from(document.querySelectorAll(".parallax-layer"));
 const revealItems = Array.from(document.querySelectorAll("[data-reveal]"));
 const floatingDonate = document.querySelector(".floating-donate");
 const donationForm = document.querySelector("[data-donation-form]");
-const exportForm = document.querySelector("[data-export-form]");
+const exportForms = Array.from(document.querySelectorAll("[data-export-form]"));
+
+document
+  .querySelectorAll("[data-form-success], [data-donation-success]")
+  .forEach((panel) => setElementHidden(panel, true));
+
+document
+  .querySelectorAll("[data-form-status], [data-export-status]")
+  .forEach((statusNode) => setLiveStatus(statusNode));
 
 /* =========================
    Navigation
@@ -202,6 +498,7 @@ if (donationForm instanceof HTMLFormElement) {
   const honorFields = donationForm.querySelector("[data-honor-fields]");
   const statusNode = donationForm.querySelector("[data-form-status]");
   const successPanel = document.querySelector("[data-donation-success]");
+  const submitButton = donationForm.querySelector("[type='submit']");
   let isSubmittingDonation = false;
 
   const setHonorFieldsState = () => {
@@ -235,18 +532,14 @@ if (donationForm instanceof HTMLFormElement) {
         firstErrorField.focus();
       }
 
-      if (statusNode) {
-        statusNode.textContent = "Please fix the highlighted fields.";
-      }
+      setLiveStatus(statusNode, "Please fix the highlighted fields.");
 
       return;
     }
 
     isSubmittingDonation = true;
-
-    if (statusNode) {
-      statusNode.textContent = "Saving your donation information...";
-    }
+    setFormBusy(donationForm, submitButton, true);
+    setLiveStatus(statusNode, "Saving your donation information...");
 
     try {
       const response = await fetch("/api/donations", {
@@ -259,8 +552,14 @@ if (donationForm instanceof HTMLFormElement) {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        if (Array.isArray(data.errors)) {
-          setFieldErrors(donationForm, data.errors);
+        if (Array.isArray(data.fields) && data.fields.length > 0) {
+          setFieldErrors(
+            donationForm,
+            data.fields.map((field) => ({
+              field,
+              message: fieldErrorMessages[field] || "Please complete this field.",
+            }))
+          );
           throw new Error("Please fix the highlighted fields.");
         }
 
@@ -273,6 +572,8 @@ if (donationForm instanceof HTMLFormElement) {
         paypalLink.href = data.paypal_url;
       }
 
+      setLiveStatus(statusNode);
+      setFormBusy(donationForm, submitButton, false);
       donationForm.hidden = true;
       if (donationForm instanceof HTMLElement) {
         donationForm.setAttribute("aria-hidden", "true");
@@ -286,17 +587,31 @@ if (donationForm instanceof HTMLFormElement) {
       }
     } catch (error) {
       isSubmittingDonation = false;
-
-      if (statusNode) {
-        statusNode.textContent =
-          error.message || "Something went wrong. Please try again.";
-      }
+      setFormBusy(donationForm, submitButton, false);
+      setLiveStatus(
+        statusNode,
+        error.message || "Something went wrong. Please try again."
+      );
     }
   });
 }
 
-if (exportForm instanceof HTMLFormElement) {
+exportForms.forEach((exportForm) => {
   const statusNode = exportForm.querySelector("[data-export-status]");
+  const submitButton = exportForm.querySelector("[type='submit']");
+  const exportUrl = exportForm.dataset.exportUrl || "/api/donations/export";
+  const fileSlug =
+    exportForm.dataset.exportName ||
+    exportUrl.replace(/\/export\/?$/, "").split("/").filter(Boolean).pop() ||
+    "records";
+
+  exportForm.addEventListener(
+    "invalid",
+    () => {
+      setLiveStatus(statusNode, "Enter the export token.");
+    },
+    true
+  );
 
   exportForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -304,19 +619,16 @@ if (exportForm instanceof HTMLFormElement) {
     const token = String(new FormData(exportForm).get("export_token") || "").trim();
 
     if (!token) {
-      if (statusNode) {
-        statusNode.textContent = "Enter the export token.";
-      }
+      setLiveStatus(statusNode, "Enter the export token.");
 
       return;
     }
 
-    if (statusNode) {
-      statusNode.textContent = "Preparing CSV...";
-    }
+    setFormBusy(exportForm, submitButton, true);
+    setLiveStatus(statusNode, "Preparing CSV...");
 
     try {
-      const response = await fetch("/api/donations/export", {
+      const response = await fetch(exportUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -324,7 +636,7 @@ if (exportForm instanceof HTMLFormElement) {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Donation records could not be exported.");
+        throw new Error(data.error || "Records could not be exported.");
       }
 
       const blob = await response.blob();
@@ -333,20 +645,18 @@ if (exportForm instanceof HTMLFormElement) {
       const today = new Date().toISOString().slice(0, 10);
 
       downloadLink.href = downloadUrl;
-      downloadLink.download = `backpack-kidz-donations-${today}.csv`;
+      downloadLink.download = `backpack-kidz-${fileSlug}-${today}.csv`;
       downloadLink.click();
       URL.revokeObjectURL(downloadUrl);
 
-      if (statusNode) {
-        statusNode.textContent = "CSV downloaded.";
-      }
+      setLiveStatus(statusNode, "CSV downloaded.");
     } catch (error) {
-      if (statusNode) {
-        statusNode.textContent = error.message || "Export failed.";
-      }
+      setLiveStatus(statusNode, error.message || "Export failed.");
+    } finally {
+      setFormBusy(exportForm, submitButton, false);
     }
   });
-}
+});
 
 /* =========================
    Reveal animations
@@ -523,6 +833,14 @@ document.querySelectorAll("[data-api-form]").forEach((form) => {
   const submitButton = form.querySelector("[type='submit']");
   let isSubmitting = false;
 
+  form.addEventListener(
+    "invalid",
+    () => {
+      setLiveStatus(statusNode, "Please complete the required fields.");
+    },
+    true
+  );
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -532,18 +850,13 @@ document.querySelectorAll("[data-api-form]").forEach((form) => {
 
     // Let the browser surface its native required-field messages first.
     if (typeof form.reportValidity === "function" && !form.reportValidity()) {
+      setLiveStatus(statusNode, "Please complete the required fields.");
       return;
     }
 
     isSubmitting = true;
-
-    if (submitButton instanceof HTMLButtonElement) {
-      submitButton.disabled = true;
-    }
-
-    if (statusNode) {
-      statusNode.textContent = "Sending...";
-    }
+    setFormBusy(form, submitButton, true);
+    setLiveStatus(statusNode, "Sending...");
 
     try {
       const response = await fetch(endpoint, {
@@ -572,6 +885,7 @@ document.querySelectorAll("[data-api-form]").forEach((form) => {
       form.reset();
 
       if (successPanel instanceof HTMLElement) {
+        setLiveStatus(statusNode);
         form.hidden = true;
         form.setAttribute("aria-hidden", "true");
 
@@ -580,19 +894,16 @@ document.querySelectorAll("[data-api-form]").forEach((form) => {
         successPanel.setAttribute("tabindex", "-1");
         successPanel.focus();
       } else if (statusNode) {
-        statusNode.textContent = "Thank you! Your message has been sent.";
+        setLiveStatus(statusNode, "Thank you! Your message has been sent.");
       }
     } catch (error) {
-      if (statusNode) {
-        statusNode.textContent =
-          error.message || "Something went wrong. Please try again.";
-      }
+      setLiveStatus(
+        statusNode,
+        error.message || "Something went wrong. Please try again."
+      );
     } finally {
       isSubmitting = false;
-
-      if (submitButton instanceof HTMLButtonElement) {
-        submitButton.disabled = false;
-      }
+      setFormBusy(form, submitButton, false);
     }
   });
 });
@@ -600,13 +911,13 @@ document.querySelectorAll("[data-api-form]").forEach((form) => {
 /* =========================
    Sponsorship cost estimate
    Mirrors the server-side COST_PER_CHILD so the Sponsor page can show a
-   live yearly total ($320 per child per school year, owner confirmed).
+   live yearly total ($275 per child across 34 delivery weeks).
 ========================= */
 
 const sponsorCalc = document.querySelector("[data-sponsor-calc]");
 
 if (sponsorCalc) {
-  const costPerChild = Number(sponsorCalc.dataset.costPerChild || 320);
+  const costPerChild = Number(sponsorCalc.dataset.costPerChild || 275);
   const countInput = sponsorCalc.querySelector("[data-sponsor-count]");
   const totalOutput = sponsorCalc.querySelector("[data-sponsor-total]");
 

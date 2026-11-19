@@ -16,14 +16,18 @@ export const googleSheetsConfigStatus = (env = process.env) => {
   return {
     configured: missing.length === 0,
     missing,
-    spreadsheetId: env.GOOGLE_SHEETS_SPREADSHEET_ID || "",
-    serviceAccountEmail: env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "",
-    privateKey: getGooglePrivateKey(env),
-    tab: env.GOOGLE_SHEETS_TAB || "Donations",
   };
 };
 
-export const paypalBusiness = (env = process.env) => env.PAYPAL_BUSINESS || "";
+export function matchesPaypalReceiver(params, env = process.env) {
+  const expected = (env.PAYPAL_RECEIVER_EMAIL || env.PAYPAL_BUSINESS || "").trim();
+  if (!expected) return true;
 
-export const paypalExpectedReceiver = (env = process.env) =>
-  env.PAYPAL_RECEIVER_EMAIL || paypalBusiness(env);
+  if (env.PAYPAL_RECEIVER_EMAIL || expected.includes("@")) {
+    const email = params.get("receiver_email") || params.get("business") || "";
+    return email.trim().toLowerCase() === expected.toLowerCase();
+  }
+
+  const merchantId = params.get("receiver_id") || params.get("business") || "";
+  return merchantId === expected;
+}

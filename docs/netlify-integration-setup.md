@@ -23,7 +23,7 @@ The functions are designed to skip optional integrations gracefully when the rel
 
 ## 2. Email Notifications With Google App Password
 
-`SMTP_USER` is the sender email account, likely `contact@backpackkidz.com`.
+`SMTP_USER` is the sender email account, configured in Google Workspace.
 
 `SMTP_PASS` is a Google App Password for that account. The Google account must have 2-Step Verification enabled before App Passwords are available.
 
@@ -42,7 +42,7 @@ Never commit the app password. If `SMTP_USER` or `SMTP_PASS` is missing, the sit
 
 ## 3. Google Sheets Donation Bookkeeping
 
-The donation form can write pending donation rows to Google Sheets, and PayPal IPN can mark matched donations as completed. The private Google setup must be completed by the owner.
+The public Donate page also links directly to Zeffy. This bookkeeping applies to the PayPal flow. The optional donation form can write pending donation rows to Google Sheets, and PayPal IPN can mark matched donations as completed. The private Google setup must be completed by the owner.
 
 Owner steps:
 
@@ -91,14 +91,14 @@ Owner steps:
 1. Add `PAYPAL_BUSINESS` in Netlify environment variables.
 2. Enable IPN in PayPal using the listener URL above.
 3. Redeploy the site.
-4. Test with PayPal sandbox, or a small real transaction if sandbox is not configured.
+4. Test the listener on a preview configured for PayPal Sandbox with a sandbox payment.
 5. Check Netlify Function logs for IPN receipt.
 
 If `PAYPAL_BUSINESS` is missing, unrelated site functionality continues. The IPN function logs a configuration warning and still handles verified IPN messages, but receiver matching depends on `PAYPAL_RECEIVER_EMAIL` if that optional backward-compatible variable is set.
 
 ## 5. Owner Content Checklist
 
-Replace remaining TODOs only with verified owner-provided information:
+Check existing content before replacing a TODO. Confirm changes with the owner for the following items:
 
 - EIN
 - Official 501(c)(3) wording

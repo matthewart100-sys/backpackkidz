@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -18,6 +18,7 @@
     <meta property="og:image" content="https://www.backpackkidz.com/assets/backpack-kidz-logo.png">
     <meta name="twitter:card" content="summary">
     <link rel="stylesheet" href="../style.css">
+    <link href="https://db.onlinewebfonts.com/c/699dc1e4167e2bdae611e413fd4a8fe0?family=Crayon+Works+DEMO+Regular" rel="stylesheet">
     <script src="../script.js" defer></script>
   </head>
   <body>
@@ -58,6 +59,7 @@
             <li><a href="/pages/gallery.html">Gallery</a></li>
             <li><a href="/pages/our-partners.html">Our Partners</a></li>
             <li><a href="/pages/contact.html">Contact</a></li>
+            <li><a href="/pages/future-events.html">Events</a></li>
           </ul>
 
           <div class="nav-actions">
@@ -88,20 +90,20 @@
 
           <aside class="page-hero-aside" data-reveal>
             <p class="aside-stat">
-              <strong>$320</strong>
-              <span>Sponsors one child for a school year</span>
+              <strong>$275</strong>
+              <span>Sponsors one child for 34 school weeks</span>
             </p>
             <p class="aside-stat">
-              <strong>$10</strong>
-              <span>Helps a child for a weekend</span>
+              <strong>$8.08</strong>
+              <span>Provides one weekend food bag</span>
             </p>
             <p>
-              That is weekend food, every weekend of the school year, for one
-              child who might otherwise go without.
+              That is one $8.08 weekend food bag across each of the 34 school
+              weeks Back Pack Kidz delivers, for one child who might otherwise go without.
             </p>
-            <!-- Owner-confirmed amounts (brochure): $320 per child per school
-                 year, $10 per weekend. Matches COST_PER_CHILD in
-                 netlify/sponsorship-utils.mjs. -->
+            <!-- Grant-season figures confirmed September 23, 2026: $275 per
+                 child per school year and $8.08 per weekend food bag. Matches
+                 COST_PER_CHILD in netlify/sponsorship-utils.mjs. -->
           </aside>
         </div>
       </section>
@@ -111,8 +113,8 @@
           <div class="section-heading" data-reveal>
             <h2 id="tiers-title">Choose how far your sponsorship reaches</h2>
             <p>
-              Every level is built on the same idea: $320 covers one child for
-              the school year. Pick the scope that fits your heart and budget.
+              Every level is built on the same idea: $275 covers one child
+              across 34 school-week deliveries. Pick the scope that fits your heart and budget.
             </p>
           </div>
 
@@ -120,7 +122,7 @@
             <article class="tier-card is-featured" data-reveal>
               <span class="tier-tag">Most personal</span>
               <h3>Sponsor a kid</h3>
-              <p class="tier-price">$320<small>one child, one school year</small></p>
+              <p class="tier-price">$275<small>one child, one school year</small></p>
               <p>Provide weekend food for a single child across the school year.</p>
               <a href="#sponsor-form" class="button button-primary">Sponsor a kid</a>
             </article>
@@ -128,7 +130,7 @@
             <article class="tier-card" data-reveal>
               <span class="tier-tag">Together</span>
               <h3>Sponsor a group</h3>
-              <p class="tier-price">$320<small>&times; the number of children</small></p>
+              <p class="tier-price">$275<small>&times; the number of children</small></p>
               <p>Pool with family or friends to sponsor several children at once.</p>
               <a href="#sponsor-form" class="button button-secondary">Sponsor a group</a>
             </article>
@@ -163,7 +165,7 @@
       </section>
 
       <section class="section" id="sponsor-form" aria-labelledby="sponsor-form-title">
-        <div class="section-inner form-layout">
+        <div class="section-inner form-layout" data-sponsor-calc data-cost-per-child="275">
           <div class="form-aside" data-reveal>
             <p class="eyebrow">Sponsorship Details</p>
             <h2 id="sponsor-form-title">Start your sponsorship.</h2>
@@ -172,10 +174,10 @@
               to finalize your gift. Your sponsorship turns directly into
               weekend food for local kids.
             </p>
-            <div class="support-panel" data-sponsor-calc data-cost-per-child="320" data-reveal>
+            <div class="support-panel" data-reveal>
               <h3>Estimated yearly sponsorship</h3>
               <p class="tier-price" data-sponsor-total>$0</p>
-              <p>Based on $320 per child for the school year.</p>
+              <p>Based on $275 per child across 34 school-week deliveries.</p>
             </div>
           </div>
 
@@ -286,6 +288,14 @@
 
     <a href="/pages/donate.html" class="floating-donate" data-donate-link>Donate Now</a>
 
+    <h1 class="marquee-container-header">Our Community Partners!</h1>
+
+    <div class="marquee-container" aria-label="Back Pack Kidz community partners">
+      <div class="marquee-track" id="marqueeTrack">
+        <div class="marquee-group" data-partner-list="marquee"></div>
+      </div>
+    </div>
+
     <footer class="site-footer">
       <div class="footer-inner">
         <div class="footer-brand">
@@ -298,13 +308,9 @@
             weekend at a time — through the power of community in Charlotte
             County.
           </p>
-          <!-- TODO (owner): Social links removed until official profiles exist.
-               When the real Back Pack Kidz Facebook, X/Twitter, and Instagram
-               URLs are available, restore the social-links block here, e.g.
-               <div class="social-links" aria-label="Social links">
-                 <a href="https://facebook.com/yourpage">Facebook</a>
-               </div>
-          -->
+          <div class="social-links" aria-label="Social links">
+            <a href="https://www.facebook.com/TheBackPackKidz/" target="_blank" rel="noopener noreferrer">Follow us on Facebook</a>
+          </div>
         </div>
 
         <div class="footer-column">
@@ -312,6 +318,7 @@
           <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/pages/about.html">About</a></li>
+            <li><a href="/pages/board-of-directors.html">Board of Directors</a></li>
             <li><a href="/pages/programs.html">Programs</a></li>
             <li><a href="/pages/gallery.html">Gallery</a></li>
             <li><a href="/pages/faq.html">FAQ</a></li>

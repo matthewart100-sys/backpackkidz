@@ -1,8 +1,15 @@
+@import url(https://db.onlinewebfonts.com/c/699dc1e4167e2bdae611e413fd4a8fe0?family=Crayon+Works+DEMO+Regular); 
+
 :root {
+  /* Solid brand colors for `color`, `border-color`, `outline`, `accent-color`
+     and gradient stops — these slots only accept a <color>, never a gradient. */
   --orange: #f97316;
   --orange-dark: #ea580c;
   --orange-soft: #fff7ed;
   --navy: #461088;
+  /* Brand gradients for background slots only. */
+  --grad-orange: linear-gradient(319deg, #fdee00 0%, #ff8243 37%, #f94d00 100%);
+  --grad-purple: linear-gradient(315deg, #e4b5cb 0%, #722ae6 74%);
   --text: #1f2937;
   --muted: #64748b;
   --white: #ffffff;
@@ -18,6 +25,8 @@
   --max-width: 1240px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --header-height: 82px;
+  --marquee-speed: 100s;
+  --marquee-gap: 3rem;
 }
 
 * {
@@ -35,12 +44,11 @@ body {
   margin: 0;
   color: var(--text);
   background: var(--white);
-  /* A clean, dependency-free system sans stack. The previous value
-     ('Brush Script MT', cursive) rendered the entire site in a script
-     font, which conflicted with the heavy headings and the professional,
-     donor-facing tone. */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: 'comic sans ms', sans-serif;
+}
+
+.logo-text {
+  font-family: "Crayon Works DEMO Regular";
 }
 
 button,
@@ -82,6 +90,13 @@ h3 {
   letter-spacing: 0;
 }
 
+/* Avoid one-word last lines in large headings (ignored by older browsers). */
+h1,
+h2 {
+  font-family: "Crayon Works DEMO Regular";
+  text-wrap: balance;
+}
+
 h1 {
   max-width: 14ch;
   font-size: 3.75rem;
@@ -118,7 +133,7 @@ h3 {
   left: 0.75rem;
   z-index: 200;
   padding: 0.65rem 1.1rem;
-  background: var(--navy);
+  background: var(--grad-purple);
   color: #fff;
   border-radius: 999px;
   font-weight: 700;
@@ -149,7 +164,7 @@ h3 {
 .navbar {
   position: relative;
   width: min(var(--max-width), 92%);
-  min-height: 82px;
+  min-height: var(--header-height);
   margin: 0 auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -214,7 +229,7 @@ h3 {
   bottom: 6px;
   left: 0;
   height: 3px;
-  background: var(--orange);
+  background: var(--grad-orange);
   border-radius: 999px;
   transform: scaleX(0);
   transform-origin: center;
@@ -242,7 +257,7 @@ h3 {
 .nav-cta,
 .button-primary {
   color: var(--white);
-  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  background: var(--grad-orange);
   box-shadow: 0 12px 24px rgba(249, 115, 22, 0.28);
 }
 
@@ -356,7 +371,7 @@ h3 {
 .hero-lede {
   max-width: 650px;
   color: #334155;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
 }
 
 .button-row {
@@ -372,7 +387,6 @@ h3 {
   justify-content: center;
   min-height: 50px;
   padding: 0 1.35rem;
-  border: 1px solid transparent;
   border-radius: 999px;
   font-size: 0.98rem;
   font-weight: 800;
@@ -450,7 +464,7 @@ h3 {
   bottom: 1.2rem;
   max-width: 260px;
   padding: 1rem;
-  color: var(--navy);
+  color: var(--grad-purple);
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: var(--radius-md);
@@ -481,7 +495,7 @@ h3 {
   gap: 0.15rem;
   min-width: 126px;
   padding: 1rem;
-  color: var(--navy);
+  color: var(--grad-purple);
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -518,7 +532,9 @@ h3 {
 .stacked-features article,
 .flow-step,
 .partner-types article,
-.faq-list article {
+.faq-list article,
+.event-detail-card,
+.event-sponsor-card {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -534,7 +550,9 @@ h3 {
 .fact-card,
 .flow-step,
 .partner-types article,
-.faq-list article {
+.faq-list article,
+.event-detail-card,
+.event-sponsor-card {
   transition: transform 0.24s var(--ease), box-shadow 0.24s var(--ease), border-color 0.24s var(--ease);
 }
 
@@ -543,14 +561,17 @@ h3 {
 .fact-card:hover,
 .flow-step:hover,
 .partner-types article:hover,
-.faq-list article:hover {
+.faq-list article:hover,
+.event-detail-card:hover,
+.event-sponsor-card:hover {
   border-color: rgba(249, 115, 22, 0.28);
   box-shadow: 0 18px 36px rgba(15, 23, 42, 0.11);
   transform: translateY(-4px);
 }
 
 .impact-icon,
-.feature-icon {
+.feature-icon,
+.event-detail-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -593,6 +614,18 @@ h3 {
   text-align: left;
 }
 
+/* A button placed inside a section heading (e.g. "View Our Partners")
+   needs breathing room below the paragraph. */
+.section-heading .button {
+  margin-top: 1.4rem;
+}
+
+/* Inside the weekend copy column the grid gap already provides spacing,
+   so the heading's bottom margin would double it up. */
+.weekend-copy .section-heading {
+  margin-bottom: 0;
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -625,9 +658,7 @@ h3 {
   align-content: center;
   min-height: 260px;
   padding: 2rem;
-  background:
-    linear-gradient(135deg, rgba(23, 37, 84, 0.96), #25044e),
-    var(--navy);
+  background: var(--grad-purple);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-strong);
 }
@@ -675,7 +706,7 @@ h3 {
   height: 62px;
   margin-bottom: 1rem;
   color: var(--white);
-  background: var(--orange);
+  background: var(--grad-orange);
   border: 8px solid var(--surface);
   border-radius: 50%;
   font-weight: 900;
@@ -689,7 +720,7 @@ h3 {
   position: relative;
   overflow: hidden;
   color: var(--white);
-  background-color: #461088;
+  background: var(--grad-purple);
 }
 
 .story-band::before {
@@ -746,9 +777,8 @@ h3 {
   position: absolute;
   width: min(260px, 62%);
   padding: 1rem;
-  color: var(--navy);
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.74);
+  color: var(--grad-purple);
+  background: var(--grad-orange);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-strong);
 }
@@ -763,7 +793,7 @@ h3 {
 }
 
 .story-card span {
-  color: var(--muted);
+  color: var(--white);
   font-size: 0.92rem;
   line-height: 1.45;
 }
@@ -793,7 +823,7 @@ h3 {
   position: sticky;
   top: 110px;
   padding: 2rem;
-  background: var(--navy);
+  background: var(--grad-purple);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-strong);
 }
@@ -860,6 +890,11 @@ h3 {
   gap: 1.6rem;
 }
 
+/* Keep the column's CTA compact instead of stretching to the grid width. */
+.weekend-copy > .button {
+  justify-self: start;
+}
+
 .stacked-features {
   display: grid;
   gap: 0.85rem;
@@ -877,12 +912,12 @@ h3 {
   bottom: 1.2rem;
   left: 0;
   width: 4px;
-  background: var(--orange);
+  background: var(--grad-orange);
   border-radius: 999px;
 }
 
 .mission-section {
-  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  background: var(--grad-orange);
 }
 
 .mission-panel {
@@ -975,6 +1010,19 @@ h3 {
 
 .nav-menu a[aria-current="page"]::after {
   transform: scaleX(1);
+}
+
+/* Keep the partners page's small text readable on its warm panels. */
+.partners-page .partners-note-panel > p,
+.partners-page .support-panel > p {
+  color: #5f6f86;
+}
+
+.partners-page .recognition-card > span,
+.partners-page .partner-impact-card > .feature-icon,
+.partners-page .eyebrow,
+.partners-page .nav-menu a[aria-current="page"] {
+  color: #c2410c;
 }
 
 .partners-hero-section {
@@ -1087,7 +1135,7 @@ h3 {
   align-content: center;
   padding: 1.5rem;
   background: var(--orange-soft);
-  border: 1px solid rgba(249, 115, 22, 0.24);
+  border: 1px solid var(--orange-dark);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
@@ -1148,6 +1196,17 @@ h3 {
   max-width: 100%;
   max-height: 92px;
   object-fit: contain;
+}
+
+.sponsor-logo-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  color: var(--navy);
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
 }
 
 .sponsor-logo-link.sponsor-logo-wide {
@@ -1230,7 +1289,7 @@ h3 {
   gap: 2rem;
   align-items: center;
   padding: 2.25rem;
-  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  background: var(--grad-purple);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-strong);
 }
@@ -1257,7 +1316,7 @@ h3 {
   min-height: 46px;
   padding: 0 1.25rem;
   color: var(--white);
-  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  background: var(--grad-orange);
   border-radius: 999px;
   box-shadow: 0 18px 34px rgba(249, 115, 22, 0.3);
   font-size: 0.95rem;
@@ -1301,7 +1360,7 @@ h3 {
 
 .site-footer {
   color: rgba(255, 255, 255, 0.82);
-  background: #461088;
+  background: var(--grad-purple);
 }
 
 .footer-inner {
@@ -1401,9 +1460,8 @@ h3 {
   outline-offset: 4px;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1100px) {
   h1 {
-    max-width: 14ch;
     font-size: 3.1rem;
   }
 
@@ -1411,19 +1469,17 @@ h3 {
     font-size: 2.1rem;
   }
 
-  .hero-grid,
-  .weekend-grid {
-    gap: 2.25rem;
-  }
-
   .footer-inner {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
 
-@media (max-width: 1100px) {
+  /* Keep the shared token in sync with the shorter mobile header so the
+     fixed nav panel and scroll offset line up with the real header edge. */
+  :root {
+    --header-height: 74px;
+  }
+
   .navbar {
-    min-height: 74px;
     grid-template-columns: auto 1fr auto;
     gap: 1rem;
   }
@@ -1526,7 +1582,8 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .hero-grid {
+  .hero-grid,
+  .weekend-grid {
     gap: 2.5rem;
   }
 
@@ -1650,14 +1707,14 @@ h3 {
     padding: 1rem;
   }
 
-  /* Hide floating donate on small screens so it doesn't block form fields */
-  .floating-donate {
-    display: none !important;
+  .nav-logo {
+    gap: 0.55rem;
+    font-size: 1.08rem;
   }
 
-  /* Make sure nav panel accounts for sticky header when opened */
-  .nav-panel {
-    top: calc(var(--header-height));
+  .logo-image {
+    width: 38px;
+    height: 38px;
   }
 
   /* Prevent accidental horizontal scroll from large radius or shadows */
@@ -1811,18 +1868,6 @@ h3 {
 
   .floating-donate {
     display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .nav-logo {
-    gap: 0.55rem;
-    font-size: 1.08rem;
-  }
-
-  .logo-image {
-    width: 38px;
-    height: 38px;
   }
 }
 
@@ -2092,8 +2137,7 @@ h3 {
   line-height: 1.35;
 }
 
-.donate-page .field-error:empty,
-.donate-page .form-status:empty {
+.donate-page .field-error:empty {
   display: none;
 }
 
@@ -2123,6 +2167,24 @@ h3 {
   height: 1.15rem;
   margin-top: 0.12rem;
   accent-color: var(--orange);
+}
+
+/* Admin export page */
+.admin-export-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.admin-page code {
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+  background: rgba(70, 16, 136, 0.07);
+  border-radius: 4px;
+  color: var(--navy);
+  overflow-wrap: break-word;
 }
 
 .donate-page .honor-fields {
@@ -2310,9 +2372,7 @@ h3 {
   gap: 1rem;
   align-content: center;
   padding: 2rem;
-  background:
-    linear-gradient(135deg, var(--navy), #25044e),
-    var(--navy);
+  background: var(--grad-purple);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-strong);
 }
@@ -2371,9 +2431,7 @@ h3 {
 
 .support-panel.support-panel-dark {
   color: var(--white);
-  background:
-    linear-gradient(135deg, rgba(23, 37, 84, 0.96), #25044e),
-    var(--navy);
+  background: var(--grad-purple);
   border-color: transparent;
 }
 
@@ -2421,7 +2479,7 @@ h3 {
   left: 0;
   width: 0.85rem;
   height: 0.85rem;
-  background: var(--orange);
+  background: var(--grad-orange);
   border-radius: 50%;
 }
 
@@ -2541,6 +2599,24 @@ h3 {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
   transition: transform 0.24s var(--ease), box-shadow 0.24s var(--ease), border-color 0.24s var(--ease);
+}
+
+.event-qr summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.event-qr img {
+  display: block;
+  width: 180px;
+  height: 180px;
+}
+
+.event-sponsor-logo {
+  display: block;
+  width: min(220px, 100%);
+  height: auto;
+  margin-block: 0.5rem 1rem;
 }
 
 .event-card:hover {
@@ -2803,10 +2879,6 @@ h3 {
   line-height: 1.45;
 }
 
-.form-shell .form-status:empty {
-  display: none;
-}
-
 .form-success {
   display: none;
   gap: 0.75rem;
@@ -2827,6 +2899,20 @@ h3 {
 
 .form-success h2 {
   font-size: 1.5rem;
+}
+
+.donate-page .form-status:empty,
+.form-shell .form-status:empty {
+  position: absolute;
+  display: block;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .form-layout {
@@ -2881,5 +2967,564 @@ h3 {
   .form-shell .form-submit-row,
   .form-shell .form-submit-row .button {
     width: 100%;
+  }
+}
+
+/* Container hides the logos scrolling out of bounds */
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  user-select: none;
+  padding: 2rem 0;
+  background: #ffffff;
+}
+
+/* Track holds both groups side-by-side; animation lives here */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: scroll-marquee var(--marquee-speed) linear infinite;
+}
+
+/* Pause on hover */
+.marquee-container:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Each group is exactly its content width; padding-right bridges the inter-group gap */
+.marquee-group {
+  display: flex;
+  align-items: center;
+  gap: var(--marquee-gap);
+  padding-right: var(--marquee-gap);
+  flex: 0 0 auto;
+}
+
+.marquee-container .sponsor-logo-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(150px, 16vw, 250px);
+  min-height: 110px;
+  padding: 0.5rem;
+  text-decoration: none;
+}
+
+.marquee-container .sponsor-logo-link img {
+  display: block;
+  width: 100%;
+  max-width: 230px;
+  max-height: 82px;
+  height: auto;
+  object-fit: contain;
+  opacity: 1;
+  visibility: visible;
+}
+
+.marquee-container .sponsor-logo-text {
+  max-width: 180px;
+  font-size: 0.98rem;
+}
+
+.marquee-container .sponsor-logo-tall img {
+  max-height: 100px;
+  max-width: 170px;
+}
+
+.marquee-container .sponsor-logo-wide img {
+  max-width: 260px;
+}
+
+.marquee-container-header {
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+  color: var(--navy);
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  font-weight: 900;
+  text-align: center;
+}
+
+/* translateX(-50%) works because JS duplicates the group, making the track 2× wide */
+@keyframes scroll-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .marquee-container .sponsor-logo-link {
+    width: clamp(130px, 42vw, 210px);
+    min-height: 92px;
+  }
+
+  .marquee-container .sponsor-logo-link img {
+    max-height: 68px;
+  }
+}
+
+/* ==========================================================================
+   Future Events page — featured event ("The Life of Riley") plus the
+   community appreciation band. Scoped to the `.events-page` body class so
+   the shared .event-card / .empty-state styles above stay untouched.
+   Card chrome, hover lift and icon pills are inherited from the shared
+   selector groups near the top of this file.
+   ========================================================================== */
+
+/* Hero — event title on the left, flyer on the right. */
+.events-page .event-hero-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 0.6fr);
+}
+
+.events-page .event-hero-copy h1 {
+  max-width: 16ch;
+  font-size: 4.1rem;
+}
+
+.events-page .event-hero-subtitle {
+  max-width: 30ch;
+  color: var(--navy);
+  font-size: 1.32rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.events-page .event-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  align-items: center;
+}
+
+.events-page .event-hero-meta dl {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.events-page .event-hero-meta dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.events-page .event-hero-meta dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.events-page .event-hero-meta dd + dt {
+  margin-top: 0.5rem;
+}
+
+/* Calendar-style date badge. Solid colors carry the text; the brand
+   gradient is confined to the decorative accent bar. */
+.event-date-badge {
+  display: grid;
+  width: 98px;
+  flex: none;
+  overflow: hidden;
+  text-align: center;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+}
+
+.event-date-badge .event-date-month {
+  padding: 0.4rem 0.25rem;
+  color: var(--white);
+  background: var(--navy);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.event-date-badge .event-date-day {
+  padding: 0.4rem 0.25rem 0.1rem;
+  color: var(--navy);
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.event-date-badge .event-date-year {
+  padding: 0 0.25rem 0.5rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+}
+
+.event-date-badge::after {
+  content: "";
+  height: 5px;
+  background: var(--grad-orange);
+}
+
+/* Flyer showcase — shares the framed look of the home-page hero media. */
+.event-flyer-figure,
+.appreciation-art {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+  margin: 0;
+}
+
+.event-flyer-frame,
+.appreciation-art-frame {
+  display: block;
+  overflow: hidden;
+  background: var(--surface);
+  border: 8px solid var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-strong);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.event-flyer-frame:hover,
+.appreciation-art-frame:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 28px 58px rgba(15, 23, 42, 0.2);
+}
+
+.event-flyer-frame img,
+.appreciation-art-frame img {
+  width: 100%;
+}
+
+.event-flyer-caption,
+.appreciation-art figcaption {
+  max-width: 36ch;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* Event detail cards (date, location, tickets, questions). */
+.events-page .event-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.event-detail-card {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  padding: 1.5rem;
+}
+
+.event-detail-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The card is a grid, so the icon pill has to opt out of stretching. */
+.event-detail-card .event-detail-icon {
+  justify-self: start;
+}
+
+.event-detail-card h3 {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.event-detail-card strong {
+  color: var(--navy);
+  font-size: 1.1rem;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.event-detail-card p {
+  font-size: 0.93rem;
+}
+
+.event-detail-card .button-text {
+  margin-top: 0.35rem;
+  justify-self: start;
+}
+
+/* Event story band. */
+.events-page .event-story-section {
+  background: var(--surface);
+}
+
+/* Sponsor and supporter credits for this event. */
+.events-page .event-sponsor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.event-sponsor-card {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+  justify-items: center;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+}
+
+.event-sponsor-card .event-sponsor-role {
+  color: var(--orange-dark);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.event-sponsor-card strong {
+  color: var(--navy);
+  font-size: 1.08rem;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.event-sponsor-card p {
+  font-size: 0.93rem;
+}
+
+/* Community appreciation band for Mr. Leroy / Leroy's Fish Shack. */
+.appreciation-section {
+  background:
+    radial-gradient(circle at 12% 16%, rgba(249, 115, 22, 0.14), transparent 44%),
+    radial-gradient(circle at 88% 84%, rgba(15, 118, 110, 0.12), transparent 42%),
+    var(--orange-soft);
+}
+
+.appreciation-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 0.52fr);
+  gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: center;
+}
+
+.appreciation-card {
+  display: grid;
+  gap: 1.15rem;
+  justify-items: start;
+  padding: clamp(1.5rem, 3vw, 2.4rem);
+  background: var(--white);
+  border: 1px solid rgba(249, 115, 22, 0.22);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.appreciation-card .appreciation-lede {
+  color: var(--text);
+  font-size: 1.06rem;
+  line-height: 1.7;
+}
+
+.appreciation-facts {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.appreciation-facts li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  color: var(--text);
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+.appreciation-facts svg {
+  width: 19px;
+  height: 19px;
+  margin-top: 0.18rem;
+  color: var(--orange-dark);
+}
+
+.appreciation-signoff {
+  color: var(--navy);
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+  .events-page .event-hero-grid,
+  .appreciation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .events-page .event-hero-copy h1 {
+    font-size: 3.1rem;
+  }
+
+  .events-page .event-detail-grid,
+  .events-page .event-sponsor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .event-flyer-figure,
+  .appreciation-art {
+    width: 100%;
+    max-width: 470px;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .events-page .event-hero-copy h1 {
+    font-size: 2.45rem;
+  }
+
+  .events-page .event-hero-subtitle {
+    font-size: 1.12rem;
+  }
+
+  .events-page .event-detail-grid,
+  .events-page .event-sponsor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .events-page .event-hero-meta {
+    gap: 0.9rem;
+  }
+
+  .event-flyer-frame,
+  .appreciation-art-frame {
+    border-width: 6px;
+  }
+
+  .appreciation-card {
+    padding: 1.35rem;
+  }
+
+  /* The hero buttons stretch full width at this breakpoint, so keep the
+     inline flyer link from doing the same. */
+  .event-detail-card .button-text,
+  .appreciation-card .button-text {
+    width: auto;
+  }
+}
+
+
+/* Board roster: scoped to the new page, using the existing brand tokens. */
+.board-page .page-hero {
+  padding: 3rem 0 4rem;
+}
+
+.board-page .section-heading {
+  margin-bottom: 2rem;
+}
+
+.board-page .section-heading h1 {
+  max-width: none;
+  text-align: center;
+}
+
+.board-page .section-heading p {
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
+.board-page .board-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.board-page .board-breadcrumb li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.board-page .board-breadcrumb li + li::before {
+  content: "/";
+  color: var(--navy);
+}
+
+.board-page .board-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--navy);
+  text-underline-offset: 0.2em;
+}
+
+.board-page .board-breadcrumb a:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 4px;
+}
+
+.board-page .board-roster {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--navy);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.board-page .board-member {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: center;
+  gap: 0.5rem 2rem;
+  padding: 1.5rem 0;
+}
+
+.board-page .board-member + .board-member {
+  border-top: 1px solid var(--border);
+}
+
+.board-page .board-member dt {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.board-page .board-member dd {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .board-page .board-roster {
+    padding: 0 1.25rem;
+  }
+
+  .board-page .board-member {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.25rem 0;
   }
 }
