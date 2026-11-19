@@ -380,7 +380,7 @@ test("signed exact batch passes and any extra diff fails", (t) => {
     /partner_batch_unintended_diff/u
   );
 });
-test("November partners require both signatures, approved bytes and exactly the reviewed files", (t) => {
+function exercisePinnedBatch(t, batchId, planPath, images) {
   const root = mkdtempSync(join(tmpdir(), "bpk-november-fixture-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const write = (path, data) => {
@@ -396,14 +396,12 @@ test("November partners require both signatures, approved bytes and exactly the 
   const files = new Map([
     [REGISTRY_PATH, Buffer.from("fixture registry updated")],
     [PARTNERS_PAGE_PATH, Buffer.from("fixture page updated")],
-    ["BackPackKidzWebsite/assets/partner-oasis.png", syntheticPng(150, 120)],
-    ["BackPackKidzWebsite/assets/partner-fawcett.png", syntheticPng(260, 58)],
+    ...images,
   ]);
   const plan = {};
   for (const [path, data] of files) {
     plan[path] = { before: before.has(path) ? sha(Buffer.from(before.get(path))) : null, after: sha(data) };
   }
-  const batchId = "november-partners-2026-11";
   const receiptPath = `publication/audit/partner-grant-season-${batchId}.json`;
   const now = Math.floor(Date.now() / 1000);
   const { privateKey, publicKey } = generateKeyPairSync("ed25519");
@@ -413,7 +411,7 @@ test("November partners require both signatures, approved bytes and exactly the 
     not_before: now - 60, not_after: now + 3600,
   }] }));
   for (const [path, source] of before) write(path, source);
-  write("publication/november-2026-partners.json", JSON.stringify(plan));
+  write(planPath, JSON.stringify(plan));
   git(root, "init", "-b", "main");
   git(root, "config", "user.name", "November Fixture");
   git(root, "config", "user.email", "fixture@example.invalid");
@@ -443,4 +441,16 @@ test("November partners require both signatures, approved bytes and exactly the 
   assert.throws(() => check(commit("wrong bytes")), /november_partner_content_invalid/u);
   git(root, "restore", "--source", base, "--staged", "--worktree", ".");
   assert.equal(check(commit("restore fixture"), approved).mode, "partner-grant-season-rollback-candidate");
+}
+test("November partners require both signatures, approved bytes and exactly the reviewed files", (t) => {
+  exercisePinnedBatch(t, "november-partners-2026-11", "publication/november-2026-partners.json", [
+    ["BackPackKidzWebsite/assets/partner-oasis.png", syntheticPng(150, 120)],
+    ["BackPackKidzWebsite/assets/partner-fawcett.png", syntheticPng(260, 58)],
+  ]);
+});
+
+test("WhitCo and Nicola's use a distinct signed three-file batch", (t) => {
+  exercisePinnedBatch(t, "whitco-nicolas-2026-11", "publication/whitco-nicolas-2026-11.json", [
+    ["BackPackKidzWebsite/assets/partner-nicolas-2026-11.png", syntheticPng(235, 208)],
+  ]);
 });

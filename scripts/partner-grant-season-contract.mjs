@@ -414,7 +414,7 @@ function validateGrant(grant, keys, at, batchId = BATCH_ID) {
       token(payload.execution_id) &&
       token(payload.run_id) &&
       payload.repository === "matthewart100-sys/backpackkidz" &&
-      payload.batch_id === batchId && [BATCH_ID, NOVEMBER_BATCH].includes(batchId),
+      payload.batch_id === batchId && (batchId === BATCH_ID || PINNED_BATCHES.has(batchId)),
     "partner_batch_grant_identity_invalid"
   );
   exact(payload.base, ["head", "tree"], "partner_batch_base");
@@ -424,7 +424,7 @@ function validateGrant(grant, keys, at, batchId = BATCH_ID) {
   );
   require(
     Array.isArray(payload.manifest) &&
-      payload.manifest.length === (batchId === NOVEMBER_BATCH ? NOVEMBER_PATHS.length : 3 + Object.keys(ASSETS).length),
+      payload.manifest.length === (batchId === BATCH_ID ? 3 + Object.keys(ASSETS).length : 2 + PINNED_BATCHES.get(batchId).images.size),
     "partner_batch_manifest_invalid"
   );
   for (const item of payload.manifest) {
@@ -612,25 +612,34 @@ function validatePartnerGrantSeasonRollback(
   };
 }
 
-const NOVEMBER_BATCH = "november-partners-2026-11";
-const NOVEMBER_PLAN = "publication/november-2026-partners.json";
-const NOVEMBER_RECEIPT = `publication/audit/partner-grant-season-${NOVEMBER_BATCH}.json`;
-const NOVEMBER_IMAGES = new Map([
-  ["BackPackKidzWebsite/assets/partner-oasis.png", [150, 120]],
-  ["BackPackKidzWebsite/assets/partner-fawcett.png", [260, 58]],
+const PINNED_BATCHES = new Map([
+  ["november-partners-2026-11", {
+    planPath: "publication/november-2026-partners.json",
+    images: new Map([
+      ["BackPackKidzWebsite/assets/partner-oasis.png", [150, 120]],
+      ["BackPackKidzWebsite/assets/partner-fawcett.png", [260, 58]],
+    ]),
+  }],
+  ["whitco-nicolas-2026-11", {
+    planPath: "publication/whitco-nicolas-2026-11.json",
+    images: new Map([
+      ["BackPackKidzWebsite/assets/partner-nicolas-2026-11.png", [235, 208]],
+    ]),
+  }],
 ]);
-const NOVEMBER_PATHS = [REGISTRY_PATH, PARTNERS_PAGE_PATH, ...NOVEMBER_IMAGES.keys()];
 
-function validateNovemberPartners(root, base, head, changes) {
-  const receiptChange = changes.find(({ path }) => path === NOVEMBER_RECEIPT);
-  if (!receiptChange && !changes.some(({ path }) => NOVEMBER_IMAGES.has(path))) return null;
+function validatePinnedPartners(root, base, head, changes, batchId, { planPath, images }) {
+  const receiptPath = `publication/audit/partner-grant-season-${batchId}.json`;
+  const paths = [REGISTRY_PATH, PARTNERS_PAGE_PATH, ...images.keys()];
+  const receiptChange = changes.find(({ path }) => path === receiptPath);
+  if (!receiptChange && !changes.some(({ path }) => images.has(path))) return null;
   require(["A", "D"].includes(receiptChange?.status), "november_partner_receipt_missing");
   const rollback = receiptChange.status === "D";
   // Rollbacks must restore the original signed base and remove precisely its additions.
   const original = rollback ? head : base;
   const published = rollback ? base : head;
   const keys = loadKeys(root, base);
-  const { grant } = parseReceiptFromRevision(root, published, NOVEMBER_RECEIPT, keys, NOVEMBER_BATCH);
+  const { grant } = parseReceiptFromRevision(root, published, receiptPath, keys, batchId);
   if (rollback) {
     git(root, ["merge-base", "--is-ancestor", grant.base.head, base]);
   } else {
@@ -639,12 +648,12 @@ function validateNovemberPartners(root, base, head, changes) {
   require(gitText(root, ["rev-parse", `${grant.base.head}^{tree}`]) === grant.base.tree, "november_partner_tree_mismatch");
 
   // The reviewed preimages and exact publishable bytes must already be on the signed base.
-  const plan = JSON.parse(readGitText(root, grant.base.head, NOVEMBER_PLAN));
-  exact(plan, NOVEMBER_PATHS, "november_partner_plan");
-  const expectedStatus = new Map([[NOVEMBER_RECEIPT, rollback ? "D" : "A"]]);
+  const plan = JSON.parse(readGitText(root, grant.base.head, planPath));
+  exact(plan, paths, "november_partner_plan");
+  const expectedStatus = new Map([[receiptPath, rollback ? "D" : "A"]]);
   const files = new Map();
-  for (const path of NOVEMBER_PATHS) {
-    const image = NOVEMBER_IMAGES.get(path);
+  for (const path of paths) {
+    const image = images.get(path);
     const pins = plan[path];
     exact(pins, ["before", "after"], "november_partner_pins");
     require(hash(pins.after) && (image ? pins.before === null : hash(pins.before)), "november_partner_pins_invalid");
@@ -660,7 +669,7 @@ function validateNovemberPartners(root, base, head, changes) {
     if (image) validateCanonicalPng(bytes, ...image);
     files.set(path, bytes);
   }
-  require(gitText(root, ["ls-tree", published, "--", NOVEMBER_RECEIPT]).startsWith("100644 blob "), "november_partner_receipt_mode_invalid");
+  require(gitText(root, ["ls-tree", published, "--", receiptPath]).startsWith("100644 blob "), "november_partner_receipt_mode_invalid");
   require(changes.length === expectedStatus.size && changes.every(({ path, status }) => expectedStatus.get(path) === status), "november_partner_unintended_diff");
   require(canonicalJson(contentManifest(files)) === canonicalJson(grant.manifest), "november_partner_manifest_mismatch");
   for (const { path, status } of changes) {
@@ -669,7 +678,7 @@ function validateNovemberPartners(root, base, head, changes) {
   return {
     status: "passed",
     mode: rollback ? "partner-grant-season-rollback-candidate" : "partner-grant-season-candidate",
-    batchId: NOVEMBER_BATCH,
+    batchId,
     head,
     headTree: gitText(root, ["rev-parse", `${head}^{tree}`]),
     changedFiles: [...expectedStatus.keys()],
@@ -691,8 +700,10 @@ export function validatePartnerGrantSeasonCandidate(root, { base, head }) {
   }
 
   const changes = candidateChanges(root, base, head);
-  const november = validateNovemberPartners(root, base, head, changes);
-  if (november) return november;
+  for (const [batchId, definition] of PINNED_BATCHES) {
+    const pinned = validatePinnedPartners(root, base, head, changes, batchId, definition);
+    if (pinned) return pinned;
+  }
   const receiptPath =
     `publication/audit/partner-grant-season-${BATCH_ID}.json`;
   const batchSpecificPaths = new Set(
